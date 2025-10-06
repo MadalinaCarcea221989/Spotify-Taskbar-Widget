@@ -1,0 +1,26 @@
+{
+  "name": "spotify-taskbar-widget",
+  "version": "1.0.0",
+  "description": "A frameless, always-on-top Spotify mini player for the Windows 11 taskbar.",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "start": "electron .",
+    "clean-tokens": "rm -f tokens.json"
+  },
+  "keywords": [
+    "spotify",
+    "electron",
+    "widget",
+    "windows",
+    "taskbar"
+  ],
+  "author": "Jules",
+  "license": "MIT",
+  "dependencies": {
+    "electron": "^28.0.0",
+    "express": "^4.18.2",
+    "node-fetch": "^3.3.2",
+    "open": "^8.4.0"
+  }
+}

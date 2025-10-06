@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';">
+    <title>Spotify Mini Player</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="widget-container">
+        <!-- Unauthorized State -->
+        <div id="auth-view" class="view">
+            <button id="connect-btn">Connect Spotify</button>
+        </div>
+
+        <!-- Player State -->
+        <div id="player-view" class="view" style="display: none;">
+            <img id="album-art" src="" alt="Album Art" />
+            <div id="track-info">
+                <div id="title">Not Playing</div>
+                <div id="artist"></div>
+            </div>
+            <div id="controls">
+                <button id="prev-btn">⏮</button>
+                <button id="play-pause-btn">⏯</button>
+                <button id="next-btn">⏭</button>
+            </div>
+             <button id="logout-btn" title="Logout">✖</button>
+        </div>
+
+        <!-- Message State (e.g., No Active Device) -->
+        <div id="message-view" class="view" style="display: none;">
+            <p id="message-text"></p>
+        </div>
+    </div>
+    <script src="renderer.js"></script>
+</body>
+</html>
