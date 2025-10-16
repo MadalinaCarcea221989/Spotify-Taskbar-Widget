@@ -54,24 +54,29 @@ function base64urlencode(buffer) {
 export function startAuthFlow(config, onAuthSuccess) {
   const { client_id, redirect_uri, scopes, port } = config;
 
+  // `redirect_uri` in the config may be an array (example file) or a string.
+  // Use the first entry when an array is provided so the authorization URL
+  // contains a single valid redirect URI instead of a comma-separated list.
+  const redirectUri = Array.isArray(redirect_uri) ? redirect_uri[0] : redirect_uri;
+
   const code_verifier = generateRandomString(128);
   const code_challenge = base64urlencode(sha256(code_verifier));
 
   const app = express();
   server = createServer(app);
 
-  app.get('/callback', async (req, res) => {
+    app.get('/callback', async (req, res) => {
     const code = req.query.code || null;
     if (!code) {
       res.status(400).send("<html><body><h1>Error</h1><p>Authorization code not found.</p></body></html>");
       return;
     }
 
-    const params = new URLSearchParams();
+  const params = new URLSearchParams();
     params.append('client_id', client_id);
     params.append('grant_type', 'authorization_code');
     params.append('code', code);
-    params.append('redirect_uri', redirect_uri);
+  params.append('redirect_uri', redirectUri);
     params.append('code_verifier', code_verifier);
 
     try {
@@ -106,18 +111,18 @@ export function startAuthFlow(config, onAuthSuccess) {
     }
   });
 
-  server.listen(port, () => {
+    server.listen(port, () => {
     const authUrl = new URL('https://accounts.spotify.com/authorize');
     authUrl.search = new URLSearchParams({
       response_type: 'code',
       client_id: client_id,
       scope: scopes,
-      redirect_uri: redirect_uri,
+        redirect_uri: redirectUri,
       code_challenge_method: 'S256',
       code_challenge: code_challenge,
     }).toString();
 
-    console.log(`Opening browser for authentication: ${authUrl.toString()}`);
+  // Open the auth URL in the user's default browser
     open(authUrl.toString());
   });
 }
@@ -156,8 +161,7 @@ export async function refreshTokens(refreshToken, config) {
       newTokens.refresh_token = refreshToken;
     }
 
-    await saveTokens(newTokens);
-    console.log('Tokens refreshed successfully.');
+  await saveTokens(newTokens);
     return newTokens;
 
   } catch (error) {

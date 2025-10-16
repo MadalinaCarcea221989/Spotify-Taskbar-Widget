@@ -15,3 +15,12 @@ release/
 # Electron logs and data
 *.log
 .electron/
+
+# User data and settings (stored in APPDATA)
+settings.json
+window-state.json
+
+# OS specific
+.DS_Store
+Thumbs.db
+desktop.ini

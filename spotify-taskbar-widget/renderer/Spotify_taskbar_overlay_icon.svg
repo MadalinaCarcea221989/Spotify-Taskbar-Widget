@@ -1,0 +1,45 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" aria-labelledby="title desc" role="img">
+  <title>Mini Player Icon</title>
+  <desc>Rounded dark square with green play triangle and equalizer bars.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#151515"></stop>
+      <stop offset="100%" stop-color="#232323"></stop>
+    </linearGradient>
+    <linearGradient id="gloss" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.18)"></stop>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"></stop>
+    </linearGradient>
+    <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="6" result="blur"></feGaussianBlur>
+      <feOffset dy="4" result="off"></feOffset>
+      <feComponentTransfer in="off">
+        <feFuncA type="linear" slope="0.28"></feFuncA>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode></feMergeNode>
+        <feMergeNode in="SourceGraphic"></feMergeNode>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background card -->
+  <rect x="12" y="12" width="232" height="232" rx="56" fill="url(#bg)" filter="url(#softShadow)"></rect>
+  <!-- Subtle edge highlight -->
+  <rect x="12.5" y="12.5" width="231" height="231" rx="55.5" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"></rect>
+
+  <!-- Play triangle -->
+  <g transform="translate(58,60)">
+  <path d="M0,28 L0,108 C0,118 10,124 18,119 L88,76 C96,71 96,65 88,60 L18,17 C10,12 0,18 0,28Z" fill="#7C4DFF"></path>
+  </g>
+
+  <!-- Equalizer bars -->
+  <g transform="translate(152,80)">
+    <rect x="0" y="36" width="16" height="68" rx="4" fill="#EAEAEA" opacity="0.9"></rect>
+    <rect x="28" y="18" width="16" height="86" rx="4" fill="#D7D7D7" opacity="0.9"></rect>
+    <rect x="56" y="52" width="16" height="52" rx="4" fill="#C4C4C4" opacity="0.9"></rect>
+  </g>
+
+  <!-- Top gloss -->
+  <path d="M68,24 h120 a44,44 0 0 1 44,44 v22 c-38,10 -94,16 -164,10 C53,98 32,78 32,60 v-4 a36,36 0 0 1 36-32z" fill="url(#gloss)"></path>
+</svg>

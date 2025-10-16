@@ -1,6 +1,9 @@
 {
-  "client_id": "YOUR_SPOTIFY_CLIENT_ID",
-  "redirect_uri": "http://localhost:4381/callback",
+  "client_id": "0f68737f57b7444fb3a39ca14261bbcb",
+  "redirect_uri": [
+    "http://localhost:4381/callback",
+    "http://127.0.0.1:4381/callback"
+  ],
   "port": 4381,
   "scopes": "user-read-currently-playing user-read-playback-state user-modify-playback-state"
 }

@@ -1,7 +1,10 @@
 import { promises as fs } from 'fs';
 import path from 'path';
+import os from 'os';
 
-const TOKEN_FILE = 'tokens.json';
+// Place tokens in a user-writable location (APPDATA on Windows or home dir fallback).
+const appDataBase = process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming');
+const TOKEN_FILE = path.join(appDataBase, 'Spotify-Taskbar-Widget', 'tokens.json');
 
 /**
  * Saves the Spotify API tokens to a local file.
