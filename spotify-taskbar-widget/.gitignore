@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Local configuration
+config.json
+
+# Stored tokens
+tokens.json
+
+# Build output
+dist/
+build/
+release/
+
+# Electron logs and data
+*.log
+.electron/
+
+# User data and settings (stored in APPDATA)
+settings.json
+window-state.json
+
+# OS specific
+.DS_Store
+Thumbs.db
+desktop.ini

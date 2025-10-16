@@ -1,0 +1,32 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "spotify-taskbar-widget", "spotify-taskbar-widget", "{8E0673E5-68A1-C27F-93EE-F86545F7F77A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{71FDB845-BB5E-6073-D3F2-F46685836E05}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppBarHelper", "spotify-taskbar-widget\tools\appbar-helper\AppBarHelper.csproj", "{BB8C1189-6BE8-5C20-2EA6-CC7DC34BFD82}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BB8C1189-6BE8-5C20-2EA6-CC7DC34BFD82}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB8C1189-6BE8-5C20-2EA6-CC7DC34BFD82}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB8C1189-6BE8-5C20-2EA6-CC7DC34BFD82}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB8C1189-6BE8-5C20-2EA6-CC7DC34BFD82}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{71FDB845-BB5E-6073-D3F2-F46685836E05} = {8E0673E5-68A1-C27F-93EE-F86545F7F77A}
+		{BB8C1189-6BE8-5C20-2EA6-CC7DC34BFD82} = {71FDB845-BB5E-6073-D3F2-F46685836E05}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {462B9C97-EBD0-42A3-B8BC-8AFE78D2D28E}
+	EndGlobalSection
+EndGlobal
