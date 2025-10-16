@@ -2,6 +2,8 @@
 
 A beautiful, lightweight Spotify mini-player for Windows 11 that sits in your taskbar like a native widget. Control your music, see album art, and use playback controls without switching windows.
 
+<img width="615" height="72" alt="image" src="https://github.com/user-attachments/assets/fe91cd6e-f69b-474a-984d-bb869476e7d8" />
+
 ## Features
 - Windows 11 acrylic design, rounded corners, smooth animations
 - Taskbar integration (48px height) or floating mode
