@@ -69,6 +69,15 @@ npm start
 
 The widget will appear at the bottom-left of your screen in **Widget Mode** by default!
 
+## Quick Launch (Batch File)
+
+To start the widget without opening VS Code or a terminal, you can use the provided `start-widget.bat` file:
+
+1. Double-click `start-widget.bat` in the project root to launch the app instantly.
+2. If you move the project to a different disk or folder, edit the `.bat` file and update the path as needed.
+
+This makes it easy for anyone to run the widget on their own system.
+
 ## Usage
 
 ### First Launch
