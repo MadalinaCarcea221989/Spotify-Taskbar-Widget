@@ -53,7 +53,7 @@ let settings = {
     appbarEdge: 'left', 
     appbarThickness: 48, 
     attachToTaskbar: false, 
-    disableAppBar: true,
+    disableAppBar: false,
     autoHideOnBlur: false, // Widget-style auto-hide
     slideAnimation: true, // Slide animations
 };
@@ -264,6 +264,7 @@ async function createWindow() {
         alwaysOnTop: true,
         skipTaskbar: true,
         resizable: false, // Widgets don't resize
+        movable: false, // Lock position to prevent accidental moves
         minWidth: 300,
         minHeight: 60,
         hasShadow: true, // Native shadow like widgets
@@ -449,21 +450,19 @@ app.on('ready', async () => {
     createWindow();
     await createTray();
 
-    // AppBar registration disabled by default due to Windows shell conflicts
     // If user had dockToTaskbar enabled previously, try registering AppBar now
-    // if (settings?.dockToTaskbar && !settings?.disableAppBar) {
-    //     try {
-    //         // wait a tick for window to be created
-    //         setTimeout(() => {
-    //             try { registerAppBar(mainWindow, settings.appbarEdge, settings.appbarThickness).catch(e => console.warn('AppBar register failed at startup:', e)); } catch (e) {}
-    //         }, 400);
-    //     } catch (e) { console.warn('Failed scheduling AppBar register:', e); }
-    // }
+    if (settings?.dockToTaskbar && !settings?.disableAppBar) {
+        try {
+            // wait a tick for window to be created
+            setTimeout(() => {
+                try { registerAppBar(mainWindow, settings.appbarEdge, settings.appbarThickness).catch(e => console.warn('AppBar register failed at startup:', e)); } catch (e) {}
+            }, 400);
+        } catch (e) { console.warn('Failed scheduling AppBar register:', e); }
+    }
 
-    // If the user passed --show, show the window; otherwise keep it in tray.
-    const shouldShow = process.argv.includes('--show');
+    // Always show the widget when the app starts
     mainWindow.once('ready-to-show', () => {
-        if (shouldShow) mainWindow.show();
+        mainWindow.show();
     });
     // Re-assert topmost and reposition when displays change (taskbar moved, resolution change, etc.)
     screen.on('display-metrics-changed', () => {

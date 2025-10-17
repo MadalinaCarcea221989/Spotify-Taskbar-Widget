@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "win": {
+      "icon": "renderer/spotify-widget.ico"
+    }
+  }
+}

@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080"><svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+
+  <defs>  <rect width="100%" height="100%" fill="#0f1720"/>
+
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">  <g transform="translate(420,160)">
+
+      <stop offset="0%" stop-color="#0a0e1a"/>    <rect width="1080" height="760" rx="18" fill="#0e1115" stroke="#20252a"/>
+
+      <stop offset="100%" stop-color="#0f1418"/>    <text x="48" y="64" fill="#fff" font-family="Segoe UI" font-size="28">Settings</text>
+
+    </linearGradient>    <g transform="translate(48,110)" fill="#cfe6ff">
+
+    <style>      <text x="0" y="0" font-size="18">Account</text>
+
+      .title { font-family: 'Segoe UI', sans-serif; font-size: 42px; font-weight: 600; fill: #ffffff; }      <rect x="0" y="18" width="420" height="56" rx="8" fill="#101316"/>
+
+      .subtitle { font-family: 'Segoe UI', sans-serif; font-size: 20px; fill: #a0a8b0; }      <text x="0" y="108" font-size="18">Appearance</text>
+
+      .callout { font-family: 'Segoe UI', sans-serif; font-size: 16px; fill: #ffffff; }      <rect x="0" y="126" width="420" height="56" rx="8" fill="#101316"/>
+
+    </style>      <text x="0" y="198" font-size="18">Behavior</text>
+
+  </defs>      <rect x="0" y="216" width="420" height="56" rx="8" fill="#101316"/>
+
+  <rect width="1920" height="1080" fill="url(#bg)"/>    </g>
+
+  <!-- Floating window -->    <g transform="translate(540,110)">
+
+  <g transform="translate(640,200)">      <text x="0" y="0" fill="#fff" font-size="18">Widget preview</text>
+
+    <rect width="640" height="480" rx="16" fill="#1a1d20" stroke="#2a2d30"/>      <rect x="0" y="18" width="420" height="220" rx="12" fill="#111217"/>
+
+    <!-- Header -->      <!-- inline small icon preview -->
+
+    <rect x="0" y="0" width="640" height="80" rx="16" fill="#1DB954"/>      <g transform="translate(10,10) scale(0.25)">
+
+    <text x="320" y="50" text-anchor="middle" style="font-family: 'Segoe UI'; font-size: 24px; fill: #fff;">Settings</text>        <rect x="20" y="20" width="472" height="472" rx="96" ry="96" fill="#1DB954"/>
+
+    <!-- Settings content -->        <g transform="translate(96,140) scale(0.5)" fill="#fff" opacity="0.98">
+
+    <g transform="translate(40,120)">          <path d="M32 136c40-22 88-22 128 0" stroke="#fff" stroke-width="18" stroke-linecap="round" fill="none" opacity="0.96"/>
+
+      <!-- Spotify Account -->          <path d="M32 104c56-30 136-30 192 0" stroke="#fff" stroke-width="14" stroke-linecap="round" fill="none" opacity="0.9"/>
+
+      <text style="font-family: 'Segoe UI'; font-size: 18px; fill: #fff;">Spotify Account</text>        </g>
+
+      <rect x="0" y="30" width="560" height="60" rx="8" fill="#2a2d30"/>      </g>
+
+      <text x="20" y="70" style="font-family: 'Segoe UI'; font-size: 16px; fill: #1DB954;">Connected as: user@example.com</text>    </g>
+
+      <rect x="480" y="45" width="80" height="30" rx="15" fill="#1DB954"/>  </g>
+
+      <text x="520" y="65" text-anchor="middle" style="font-family: 'Segoe UI'; font-size: 14px; fill: #fff;">Reconnect</text>  <text x="120" y="140" fill="#e6eef8" font-family="Segoe UI" font-size="36">Settings & Configuration</text>
+
+      <!-- Appearance -->  <text x="120" y="186" fill="#9fb0c6" font-family="Segoe UI" font-size="18">Fine tune appearance, account and behavior</text>
+
+      <text y="120" style="font-family: 'Segoe UI'; font-size: 18px; fill: #fff;">Appearance</text></svg>
+      <rect x="0" y="150" width="560" height="60" rx="8" fill="#2a2d30"/>
+      <text x="20" y="190" style="font-family: 'Segoe UI'; font-size: 16px; fill: #fff;">Theme: Dark</text>
+      <circle cx="520" cy="180" r="15" fill="#1DB954"/>
+      <circle cx="520" cy="180" r="8" fill="#fff"/>
+      <!-- Behavior -->
+      <text y="240" style="font-family: 'Segoe UI'; font-size: 18px; fill: #fff;">Behavior</text>
+      <rect x="0" y="270" width="560" height="60" rx="8" fill="#2a2d30"/>
+      <text x="20" y="310" style="font-family: 'Segoe UI'; font-size: 16px; fill: #fff;">Auto-hide when inactive</text>
+      <circle cx="520" cy="300" r="15" fill="#1DB954"/>
+      <circle cx="520" cy="300" r="8" fill="#fff"/>
+      <rect x="0" y="340" width="560" height="60" rx="8" fill="#2a2d30"/>
+      <text x="20" y="380" style="font-family: 'Segoe UI'; font-size: 16px; fill: #fff;">Show notifications</text>
+      <circle cx="520" cy="370" r="15" fill="#1DB954"/>
+      <circle cx="520" cy="370" r="8" fill="#fff"/>
+    </g>
+  </g>
+  <!-- Annotations -->
+  <text x="120" y="120" class="title">Customizable Settings</text>
+  <text x="120" y="160" class="subtitle">Tailor the widget to your preferences</text>
+  <!-- Callout -->
+  <rect x="600" y="720" width="400" height="60" rx="8" fill="#1a1d20" opacity="0.9"/>
+  <text x="620" y="750" class="callout">Theme, behavior, and account management</text>
+</svg>

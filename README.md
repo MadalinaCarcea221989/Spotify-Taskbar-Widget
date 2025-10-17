@@ -5,52 +5,92 @@
 
 A beautiful, lightweight Spotify mini-player for Windows 11 that sits in your taskbar like a native widget. Control your music, see album art, and use playback controls without switching windows.
 
-<img width="672" height="72" alt="image" src="https://github.com/user-attachments/assets/551ed073-2a1b-444b-9562-74d1bd85c6dd" />
-
+![Spotify Taskbar Widget](assets/store/screenshots/screenshot-1.png)
 
 ## Features
-- Windows 11 acrylic design, rounded corners, smooth animations
-- Taskbar integration (48px height) or floating mode
-- Real-time updates: album art, track title, artist, playback state
-- Full playback control: play/pause, next, previous, like/unlike
-- Secure authentication (PKCE, no client secret)
-- Tokens encrypted at rest
-- Auto-start, auto-hide, system tray menu
-- DevTools for live CSS editing
 
-## Quick Start
-1. Clone the repo:
+- 🎵 **Real-time Spotify integration** - Album art, track info, playback state
+- 🎨 **Native Windows 11 design** - Acrylic effects, rounded corners, smooth animations
+- 📍 **Smart taskbar positioning** - Locks into taskbar or floats as needed
+- 🎮 **Full playback controls** - Play/pause, next/previous, like/unlike tracks
+- 🔒 **Secure authentication** - PKCE flow, encrypted token storage
+- 🔔 **Smart notifications** - Toast notifications with controls
+- ⚙️ **Customizable settings** - Theme, behavior, account management
+- 🚀 **Auto-start & tray** - System tray menu, auto-hide options
+
+## Installation
+
+### Option 1: Download Pre-built Installer (Recommended)
+
+1. Go to [Releases](https://github.com/MadalinaCarcea221989/Spotify-Taskbar-Widget/releases)
+2. Download the latest `Spotify Taskbar Widget Setup X.X.X.exe`
+3. Run the installer and follow the setup wizard
+4. The widget will launch automatically after installation
+
+### Option 2: Build from Source
+
+1. Clone the repository:
+
    ```bash
    git clone https://github.com/MadalinaCarcea221989/Spotify-Taskbar-Widget.git
-   cd Spotify-Taskbar-Widget/spotify-taskbar-widget
+   cd Spotify-Taskbar-Widget
    ```
+
 2. Install dependencies:
+
    ```bash
+   cd spotify-taskbar-widget
    npm install
    ```
-3. Create your Spotify app and config file (see widget README for details).
+
+3. Set up Spotify app:
+   - Create a Spotify app at [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
+   - Copy `config.example.json` to `config.json`
+   - Add your Spotify app's Client ID
+
 4. Run the widget:
+
    ```bash
    npm start
    ```
 
-## Packaging as a Standalone App
-To build a Windows `.exe`:
+## Usage
+
+- The widget appears in your taskbar after first launch
+- Click the widget to open the full control panel
+- Use the system tray icon to hide/show or quit
+- Right-click for quick access to settings
+
+## Building
+
+To create your own installer:
+
 ```bash
+cd spotify-taskbar-widget
 npm run dist
 ```
-Find the portable app in `dist/win-unpacked/Spotify Taskbar Widget.exe`.
+
+The installer will be created in `spotify-taskbar-widget/dist/`
 
 ## Security & Privacy
-- Sensitive files (`config.json`, `tokens.json`, `settings.json`, `window-state.json`, `dist/`, `build/`) are excluded from git by `.gitignore`.
-- Spotify tokens are encrypted at rest.
 
-## More Info & Advanced Usage
-See [`spotify-taskbar-widget/README.md`](./spotify-taskbar-widget/README.md) for:
-- Widget features and customization
-- Troubleshooting
-- Visual design guide
-- Developer notes
+- Spotify tokens are encrypted at rest using AES
+- No data is sent to external servers except Spotify's official API
+- Configuration files are excluded from version control
+
+## Requirements
+
+- Windows 10/11
+- Spotify Premium account (for playback control)
+- Internet connection for Spotify API access
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit issues and pull requests.
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details
 
 ---
-Maintained by MadalinaCarcea221989. Contributions welcome!
+Built with Electron, maintained by [MadalinaCarcea221989](https://github.com/MadalinaCarcea221989)

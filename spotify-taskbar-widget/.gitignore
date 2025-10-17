@@ -24,3 +24,14 @@ window-state.json
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Generated store/export assets (keep source SVGs in repo, ignore exported PNG/ICO)
+assets/store/exports/
+assets/store/exports/**
+
+# Ignore exported raster store assets if accidentally placed in source folders
+assets/store/**/*.png
+assets/store/**/*.ico
+# Ignore temporary or candidate concept icons
+assets/store/icons/icon-concept*.svg
+assets/store/icons/icon-base.svg

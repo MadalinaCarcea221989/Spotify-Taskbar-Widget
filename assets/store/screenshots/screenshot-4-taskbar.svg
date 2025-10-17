@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#0a0e1a"/>
+      <stop offset="100%" stop-color="#0f1418"/>
+    </linearGradient>
+    <style>
+      .title { font-family: 'Segoe UI', sans-serif; font-size: 42px; font-weight: 600; fill: #ffffff; }
+      .subtitle { font-family: 'Segoe UI', sans-serif; font-size: 20px; fill: #a0a8b0; }
+      .callout { font-family: 'Segoe UI', sans-serif; font-size: 16px; fill: #ffffff; }
+    </style>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#bg)"/>
+  <!-- Windows taskbar -->
+  <rect x="0" y="1000" width="1920" height="80" fill="#2a2d30"/>
+  <!-- Taskbar icons -->
+  <g transform="translate(100,1020)">
+    <rect width="60" height="40" rx="4" fill="#444"/>
+    <text x="30" y="25" text-anchor="middle" style="font-family: 'Segoe UI'; font-size: 10px; fill: #fff;">Start</text>
+    <rect x="80" width="60" height="40" rx="4" fill="#444"/>
+    <text x="110" y="25" text-anchor="middle" style="font-family: 'Segoe UI'; font-size: 10px; fill: #fff;">Apps</text>
+    <!-- Widget in taskbar -->
+    <rect x="160" width="200" height="40" rx="4" fill="#1DB954"/>
+    <text x="260" y="25" text-anchor="middle" style="font-family: 'Segoe UI'; font-size: 12px; fill: #fff;">Spotify Widget</text>
+    <rect x="380" width="60" height="40" rx="4" fill="#444"/>
+    <text x="410" y="25" text-anchor="middle" style="font-family: 'Segoe UI'; font-size: 10px; fill: #fff;">...</text>
+  </g>
+  <!-- Desktop area -->
+  <rect x="0" y="0" width="1920" height="1000" fill="#0a0e1a" opacity="0.8"/>
+  <!-- Floating widget -->
+  <g transform="translate(800,400)">
+    <rect width="320" height="200" rx="12" fill="#1a1d20" stroke="#2a2d30"/>
+    <!-- Mini player -->
+    <rect x="0" y="0" width="320" height="60" rx="12" fill="#1DB954"/>
+    <text x="160" y="35" text-anchor="middle" style="font-family: 'Segoe UI'; font-size: 16px; fill: #fff;">Now Playing</text>
+    <!-- Controls -->
+    <g transform="translate(80,100)">
+      <circle cx="40" cy="40" r="25" fill="#444"/>
+      <path d="M25 25 L25 55 L55 40 Z" fill="#fff"/>
+      <circle cx="120" cy="40" r="25" fill="#1DB954"/>
+      <rect x="105" y="25" width="30" height="30" fill="none" stroke="#fff" stroke-width="3"/>
+      <circle cx="200" cy="40" r="25" fill="#444"/>
+      <path d="M185 25 L185 55 L215 40 Z" fill="#fff"/>
+      <path d="M215 25 L215 55 L185 40 Z" fill="#fff"/>
+    </g>
+  </g>
+  <!-- Annotations -->
+  <text x="120" y="120" class="title">Seamless Taskbar Integration</text>
+  <text x="120" y="160" class="subtitle">Always accessible, never in the way</text>
+  <!-- Callout -->
+  <rect x="600" y="720" width="400" height="60" rx="8" fill="#1a1d20" opacity="0.9"/>
+  <text x="620" y="750" class="callout">Locks into taskbar for instant music control</text>
+</svg>
