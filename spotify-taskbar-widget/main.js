@@ -37,9 +37,10 @@ try {
     // non-fatal; continue with defaults
 }
 
-const APP_WIDTH = 380;
-const APP_HEIGHT = 80;
-const COMPACT_HEIGHT = 48; // Height when docked - matches Windows 11 taskbar exactly
+const APP_WIDTH = 340;
+const TASKBAR_HEIGHT = 48; // Windows 11 taskbar thickness at 100% scale
+const APP_HEIGHT = TASKBAR_HEIGHT;
+const COMPACT_HEIGHT = TASKBAR_HEIGHT; // Height when docked - matches Windows taskbar thickness
 const REFRESH_SKEW_SECONDS = 30;
 
 let mainWindow;
@@ -48,16 +49,21 @@ let config;
 let currentTokens;
 let settings = { 
     dockToTaskbar: true, 
-    keepTopAlways: false, 
+    keepTopAlways: true, 
     verboseLogging: false, 
     appbarEdge: 'left', 
-    appbarThickness: 48, 
-    attachToTaskbar: false, 
+    appbarThickness: TASKBAR_HEIGHT, 
+    attachToTaskbar: true, 
     disableAppBar: false,
-    autoHideOnBlur: false, // Widget-style auto-hide
+    autoHideOnBlur: false, // Widget-style auto-hide (disabled by default)
     slideAnimation: true, // Slide animations
+    lastDockedPosition: true,
 };
 let appbarRegistered = false;
+let lastKnownFloatingBounds = null;
+let restoredFloatingPosition = false;
+let lastDockedPosition = null;
+let dockPositionSaveTimeout = null;
 
 function maybeLog(...args) {
     try {
@@ -73,6 +79,7 @@ async function loadSettings() {
     try {
         const raw = await fs.readFile(SETTINGS_FILE, 'utf-8');
         settings = JSON.parse(raw);
+        if (settings?.lastDockedPosition) lastDockedPosition = settings.lastDockedPosition;
     } catch (err) {
         // ignore, use defaults
     }
@@ -84,6 +91,15 @@ async function saveSettings() {
     } catch (err) {
         console.error('Failed to save settings:', err);
     }
+}
+function scheduleDockPositionSave() {
+    if (!settings) return;
+    settings.lastDockedPosition = lastDockedPosition;
+    if (dockPositionSaveTimeout) clearTimeout(dockPositionSaveTimeout);
+    dockPositionSaveTimeout = setTimeout(() => {
+        dockPositionSaveTimeout = null;
+        saveSettings().catch(err => console.error('Failed to persist dock position:', err));
+    }, 400);
 }
 
 // Provide the dock state to the renderer on request
@@ -108,8 +124,8 @@ ipcMain.handle('request-dock-at', async (_event, coords) => {
 
         settings.dockToTaskbar = !!shouldDock;
         await saveSettings();
-        if (mainWindow) positionWindowAroundTaskbar(mainWindow);
-        try { mainWindow?.webContents.send('docked-changed', !!settings.dockToTaskbar); } catch (e) {}
+        await applyDockPreferences();
+        try { tray?.setContextMenu(Menu.buildFromTemplate(buildContextMenu())); } catch (e) { /* ignore */ }
         return { ok: true, docked: !!settings.dockToTaskbar };
     } catch (err) {
         return { ok: false };
@@ -161,29 +177,51 @@ function positionWindowAroundTaskbar(win) {
         else if (workArea.width < bounds.width) { edge = 'right'; taskbarSize = bounds.width - workArea.width; }
         else { edge = 'bottom'; taskbarSize = bounds.height - workArea.height; }
 
-        const margin = 4; // Small margin to sit just above taskbar
+        const margin = 4; // Small inset margin inside taskbar bounds
         let x, y, width, height;
 
         if (settings?.dockToTaskbar) {
             // Widget mode: sit just above/beside taskbar like Windows 11 widgets
             width = APP_WIDTH;
-            height = COMPACT_HEIGHT;
+            const measuredThickness = Math.max(COMPACT_HEIGHT, Math.round(taskbarSize || COMPACT_HEIGHT));
+            height = measuredThickness;
             
             if (edge === 'bottom') {
-                // Position at bottom-left corner, just above taskbar
-                x = bounds.x + margin;
-                y = workArea.y + workArea.height - height - margin;
+                const minX = bounds.x + margin;
+                const maxX = bounds.x + bounds.width - width - margin;
+                let desiredX = bounds.x + margin;
+                if (lastDockedPosition?.edge === edge && typeof lastDockedPosition.x === 'number') {
+                    desiredX = lastDockedPosition.x;
+                }
+                x = Math.min(Math.max(desiredX, minX), Math.max(minX, maxX));
+                y = bounds.y + bounds.height - height - margin;
             } else if (edge === 'top') {
-                x = bounds.x + margin;
-                y = workArea.y + margin;
+                const minX = bounds.x + margin;
+                const maxX = bounds.x + bounds.width - width - margin;
+                let desiredX = bounds.x + margin;
+                if (lastDockedPosition?.edge === edge && typeof lastDockedPosition.x === 'number') {
+                    desiredX = lastDockedPosition.x;
+                }
+                x = Math.min(Math.max(desiredX, minX), Math.max(minX, maxX));
+                y = bounds.y + margin;
             } else if (edge === 'left') {
-                // Position at top-left, just to the right of taskbar
-                x = workArea.x + margin;
-                y = workArea.y + margin;
+                x = bounds.x + margin;
+                const minY = bounds.y + margin;
+                const maxY = bounds.y + bounds.height - height - margin;
+                let desiredY = bounds.y + margin;
+                if (lastDockedPosition?.edge === edge && typeof lastDockedPosition.y === 'number') {
+                    desiredY = lastDockedPosition.y;
+                }
+                y = Math.min(Math.max(desiredY, minY), Math.max(minY, maxY));
             } else if (edge === 'right') {
-                // Position at top-right, just to the left of taskbar
-                x = workArea.x + workArea.width - width - margin;
-                y = workArea.y + margin;
+                x = bounds.x + bounds.width - width - margin;
+                const minY = bounds.y + margin;
+                const maxY = bounds.y + bounds.height - height - margin;
+                let desiredY = bounds.y + margin;
+                if (lastDockedPosition?.edge === edge && typeof lastDockedPosition.y === 'number') {
+                    desiredY = lastDockedPosition.y;
+                }
+                y = Math.min(Math.max(desiredY, minY), Math.max(minY, maxY));
             }
             
             try { win.setSize(width, height); } catch (e) {}
@@ -209,6 +247,11 @@ function positionWindowAroundTaskbar(win) {
         }
 
         win.setPosition(x, y);
+        if (settings?.dockToTaskbar) {
+            lastDockedPosition = { edge, x, y, width, height };
+            scheduleDockPositionSave();
+        }
+        ensureTopMost(win);
 
         // Keep window above taskbar using appropriate level
         try {
@@ -226,7 +269,63 @@ function positionWindowAroundTaskbar(win) {
     } catch (err) {
         console.error('Error positioning window:', err);
     }
-}// Ensure the given window remains top-most with strong level hints.
+}
+// Normalize AppBar registration and window positioning for the current dock preference.
+async function applyDockPreferences({ repositionFloating = false } = {}) {
+    if (!mainWindow) return;
+    const docked = !!settings?.dockToTaskbar;
+
+    try { mainWindow.setMovable(true); } catch (err) { /* ignore */ }
+
+    if (docked) {
+        restoredFloatingPosition = false;
+        if (!settings?.disableAppBar) {
+            try {
+                if (!appbarRegistered) {
+                    await registerAppBar(mainWindow, settings.appbarEdge, settings.appbarThickness);
+                } else {
+                    positionWindowAroundTaskbar(mainWindow);
+                }
+            } catch (err) {
+                console.warn('AppBar register failed:', err);
+            }
+        } else {
+            positionWindowAroundTaskbar(mainWindow);
+        }
+    } else {
+        if (!settings?.disableAppBar && appbarRegistered) {
+            try { await unregisterAppBar(mainWindow); } catch (err) { console.warn('AppBar unregister failed:', err); }
+        }
+        try { mainWindow.setSize(APP_WIDTH, APP_HEIGHT); } catch (err) { /* ignore */ }
+        if (repositionFloating) {
+            try {
+                let target = lastKnownFloatingBounds;
+                if (!target && mainWindow.getBounds) target = mainWindow.getBounds();
+                let targetDisplay = null;
+                if (target && typeof target.x === 'number' && typeof target.y === 'number') {
+                    targetDisplay = screen.getDisplayNearestPoint({ x: target.x, y: target.y });
+                }
+                if (!targetDisplay) targetDisplay = screen.getPrimaryDisplay();
+                const work = targetDisplay.workArea;
+                let x;
+                let y;
+                if (target && typeof target.x === 'number' && typeof target.y === 'number') {
+                    x = Math.min(Math.max(target.x, work.x), work.x + work.width - APP_WIDTH);
+                    y = Math.min(Math.max(target.y, work.y), work.y + work.height - APP_HEIGHT);
+                } else {
+                    x = Math.round(work.x + (work.width - APP_WIDTH) / 2);
+                    y = Math.round(work.y + work.height - APP_HEIGHT - 12);
+                }
+                mainWindow.setPosition(x, y);
+                lastKnownFloatingBounds = { x, y, width: APP_WIDTH, height: APP_HEIGHT };
+                restoredFloatingPosition = true;
+            } catch (err) { /* ignore */ }
+        }
+    }
+
+    try { mainWindow.webContents.send('docked-changed', docked); } catch (err) { /* ignore */ }
+}
+// Ensure the given window remains top-most with strong level hints.
 function ensureTopMost(win) {
     if (!win) return;
     try {
@@ -264,9 +363,9 @@ async function createWindow() {
         alwaysOnTop: true,
         skipTaskbar: true,
         resizable: false, // Widgets don't resize
-        movable: false, // Lock position to prevent accidental moves
-        minWidth: 300,
-        minHeight: 60,
+        movable: true, // Allow user-controlled positioning
+        minWidth: APP_WIDTH,
+        minHeight: COMPACT_HEIGHT,
         hasShadow: true, // Native shadow like widgets
         roundedCorners: true, // Rounded like W11 widgets
         webPreferences: {
@@ -279,13 +378,26 @@ async function createWindow() {
 
     // Widget-like behavior: hide when clicking outside (optional)
     mainWindow.on('blur', () => {
-        if (settings?.autoHideOnBlur && settings?.dockToTaskbar) {
+        if (!settings?.autoHideOnBlur || !settings?.dockToTaskbar) {
+            // In floating mode (or when auto-hide disabled) keep it above other windows
             setTimeout(() => {
-                if (!mainWindow.isFocused()) {
-                    mainWindow.hide();
-                }
-            }, 200);
+                try {
+                    if (settings?.dockToTaskbar) positionWindowAroundTaskbar(mainWindow);
+                    ensureTopMost(mainWindow);
+                } catch (err) { /* ignore */ }
+            }, 120);
+            return;
         }
+        setTimeout(() => {
+            try {
+                if (!mainWindow || mainWindow.isDestroyed()) return;
+                if (mainWindow.isFocused()) return;
+                if (mainWindow.webContents?.isDevToolsOpened?.()) return;
+                mainWindow.hide();
+            } catch (err) {
+                // ignore
+            }
+        }, 200);
     });
 
     // DevTools keyboard shortcut (Ctrl+Shift+I or F12)
@@ -303,35 +415,50 @@ async function createWindow() {
     // Restore last size/position if available
     try {
         const prev = await loadWindowState();
+        let positioned = false;
         if (prev) {
-            // Use previous width/height if present
+            lastKnownFloatingBounds = { ...prev };
             if (prev.width && prev.height) {
-                try { mainWindow.setSize(Math.max(prev.width, 300), Math.max(prev.height, 60)); } catch (e) {}
+                try { mainWindow.setSize(APP_WIDTH, APP_HEIGHT); } catch (e) {}
             }
-            // If previous x/y present, use them; we'll validate they are within a display
-            if (typeof prev.x === 'number' && typeof prev.y === 'number') {
-                // Find a display that contains the saved point; otherwise use primary
+
+            if (!settings?.dockToTaskbar && typeof prev.x === 'number' && typeof prev.y === 'number') {
                 const displays = screen.getAllDisplays();
                 const found = displays.find(d => {
                     const b = d.bounds;
                     return prev.x >= b.x && prev.x <= b.x + b.width && prev.y >= b.y && prev.y <= b.y + b.height;
                 });
                 if (found) {
-                    try { mainWindow.setPosition(prev.x, prev.y); } catch (e) {}
-                } else {
-                    // place relative to primary workArea
-                    positionWindowAroundTaskbar(mainWindow);
-                    ensureTopMost(mainWindow);
+                    try { mainWindow.setPosition(prev.x, prev.y); positioned = true; restoredFloatingPosition = true; } catch (e) {}
                 }
-            } else {
-                positionWindowAroundTaskbar(mainWindow);
             }
-        } else {
-            positionWindowAroundTaskbar(mainWindow);
+        }
+
+        if (!positioned) {
+            if (settings?.dockToTaskbar) {
+                positionWindowAroundTaskbar(mainWindow);
+                restoredFloatingPosition = false;
+            } else {
+                try {
+                    const display = screen.getPrimaryDisplay();
+                    const work = display.workArea;
+                    const x = Math.round(work.x + (work.width - APP_WIDTH) / 2);
+                    const y = Math.round(work.y + work.height - APP_HEIGHT - 12);
+                    mainWindow.setPosition(x, y);
+                    lastKnownFloatingBounds = { x, y, width: APP_WIDTH, height: APP_HEIGHT };
+                    restoredFloatingPosition = true;
+                    positioned = true;
+                } catch (e) {
+                    // fall back to default
+                }
+            }
         }
     } catch (err) {
         console.warn('Error restoring window state:', err);
-        positionWindowAroundTaskbar(mainWindow);
+        if (settings?.dockToTaskbar) {
+            positionWindowAroundTaskbar(mainWindow);
+        }
+        restoredFloatingPosition = false;
     }
 
     mainWindow.loadFile('renderer/index.html');
@@ -347,13 +474,15 @@ async function createWindow() {
     // Persist window bounds on move/resize (debounced)
     let saveTimeout = null;
     const persistBounds = () => {
-        if (!mainWindow) return;
+        if (!mainWindow || settings?.dockToTaskbar) return;
         try {
             const bounds = mainWindow.getBounds();
-            // Debounce writes
+            const serializedBounds = { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height };
+            lastKnownFloatingBounds = serializedBounds;
+            restoredFloatingPosition = true;
             if (saveTimeout) clearTimeout(saveTimeout);
             saveTimeout = setTimeout(() => {
-                saveWindowState(bounds);
+                saveWindowState(serializedBounds);
                 saveTimeout = null;
             }, 500);
         } catch (err) {
@@ -365,11 +494,14 @@ async function createWindow() {
     mainWindow.on('resize', persistBounds);
     mainWindow.on('close', () => {
         // Write immediately on close
-        if (!mainWindow) return;
+        if (!mainWindow || settings?.dockToTaskbar) return;
         try {
             const bounds = mainWindow.getBounds();
+            const serializedBounds = { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height };
+            lastKnownFloatingBounds = serializedBounds;
+            restoredFloatingPosition = true;
             if (saveTimeout) clearTimeout(saveTimeout);
-            saveWindowState(bounds);
+            saveWindowState(serializedBounds);
         } catch (err) {
             // ignore
         }
@@ -424,8 +556,11 @@ async function createTray() {
     tray.on('double-click', () => {
         if (!mainWindow) return;
         if (mainWindow.isVisible()) mainWindow.hide(); else {
-            positionWindowAroundTaskbar(mainWindow);
-                ensureTopMost(mainWindow);
+            if (settings?.dockToTaskbar) positionWindowAroundTaskbar(mainWindow);
+            else {
+                try { mainWindow.setSize(APP_WIDTH, APP_HEIGHT); } catch (e) { /* ignore */ }
+            }
+            ensureTopMost(mainWindow);
             mainWindow.show();
             startKeepTopBurst(mainWindow);
         }
@@ -450,14 +585,13 @@ app.on('ready', async () => {
     createWindow();
     await createTray();
 
-    // If user had dockToTaskbar enabled previously, try registering AppBar now
-    if (settings?.dockToTaskbar && !settings?.disableAppBar) {
-        try {
-            // wait a tick for window to be created
-            setTimeout(() => {
-                try { registerAppBar(mainWindow, settings.appbarEdge, settings.appbarThickness).catch(e => console.warn('AppBar register failed at startup:', e)); } catch (e) {}
-            }, 400);
-        } catch (e) { console.warn('Failed scheduling AppBar register:', e); }
+    // Apply docking/AppBar state after the window has had a moment to initialize
+    try {
+        setTimeout(() => {
+            applyDockPreferences({ repositionFloating: !settings?.dockToTaskbar }).catch(err => console.warn('Initial dock apply failed:', err));
+        }, 400);
+    } catch (e) {
+        console.warn('Failed scheduling initial dock apply:', e);
     }
 
     // Always show the widget when the app starts
@@ -468,11 +602,21 @@ app.on('ready', async () => {
     screen.on('display-metrics-changed', () => {
         try {
             if (!mainWindow) return;
-            const display = screen.getPrimaryDisplay();
-            const workArea = display.workArea;
-            const x = Math.round(workArea.x + (workArea.width - APP_WIDTH) / 2);
-            const y = Math.round(workArea.y + workArea.height - APP_HEIGHT - 8);
-            mainWindow.setPosition(x, y);
+            if (settings?.dockToTaskbar) {
+                positionWindowAroundTaskbar(mainWindow);
+            } else {
+                const bounds = mainWindow.getBounds ? mainWindow.getBounds() : null;
+                const display = bounds ? screen.getDisplayNearestPoint({ x: bounds.x, y: bounds.y }) : screen.getPrimaryDisplay();
+                const workArea = display.workArea;
+                if (bounds) {
+                    const clampedX = Math.min(Math.max(bounds.x, workArea.x), workArea.x + workArea.width - bounds.width);
+                    const clampedY = Math.min(Math.max(bounds.y, workArea.y), workArea.y + workArea.height - bounds.height);
+                    if (clampedX !== bounds.x || clampedY !== bounds.y) {
+                        mainWindow.setPosition(clampedX, clampedY);
+                    }
+                }
+                try { mainWindow.setSize(APP_WIDTH, APP_HEIGHT); } catch (e) { /* ignore */ }
+            }
             mainWindow.setAlwaysOnTop(true, 'screen-saver');
             ensureTopMost(mainWindow);
         } catch (err) {
@@ -796,12 +940,8 @@ async function registerAppBar(win, edge = 'bottom', thickness = 48) {
                 const parsed = out ? JSON.parse(out) : { ok: code === 0 };
                 if (parsed.ok) {
                     // If helper returned a rect, apply it to the BrowserWindow
-                    if (parsed.rect && win && !win.isDestroyed()) {
-                        try {
-                            const w = Math.max(100, parsed.rect.right - parsed.rect.left);
-                            const h = Math.max(24, parsed.rect.bottom - parsed.rect.top);
-                            win.setBounds({ x: parsed.rect.left, y: parsed.rect.top, width: w, height: h });
-                        } catch (e) { console.warn('Failed to set bounds from AppBar rect:', e); }
+                    if (win && !win.isDestroyed()) {
+                        try { positionWindowAroundTaskbar(win); } catch (e) { console.warn('Failed to re-position after AppBar register:', e); }
                     }
                     // Start periodic re-register to handle Explorer restarts
                     try { startAppBarReregister(win, edge, thickness); } catch (e) {}
@@ -891,7 +1031,11 @@ function buildContextMenu() {
         { label: 'Show / Hide', click: () => {
             if (!mainWindow) return;
             if (mainWindow.isVisible()) mainWindow.hide(); else {
-                positionWindowAroundTaskbar(mainWindow);
+                if (settings?.dockToTaskbar) positionWindowAroundTaskbar(mainWindow);
+                else {
+                    try { mainWindow.setSize(APP_WIDTH, APP_HEIGHT); } catch (e) { /* ignore */ }
+                }
+                ensureTopMost(mainWindow);
                 mainWindow.show();
                 startKeepTopBurst(mainWindow);
             }
@@ -900,11 +1044,8 @@ function buildContextMenu() {
         { label: settings.dockToTaskbar ? 'Floating Mode' : 'Widget Mode (Taskbar-style)', type: 'checkbox', checked: !!settings.dockToTaskbar, click: async () => {
             settings.dockToTaskbar = !settings.dockToTaskbar;
             await saveSettings();
-            if (mainWindow) {
-                positionWindowAroundTaskbar(mainWindow);
-                ensureTopMost(mainWindow);
-            }
-            try { mainWindow?.webContents.send('docked-changed', !!settings.dockToTaskbar); } catch (e) {}
+            await applyDockPreferences({ repositionFloating: !settings.dockToTaskbar });
+            ensureTopMost(mainWindow);
             try { tray?.setContextMenu(Menu.buildFromTemplate(buildContextMenu())); } catch (e) {}
         } },
         { label: 'Auto-hide on blur', type: 'checkbox', checked: !!settings.autoHideOnBlur, click: async (mi) => {

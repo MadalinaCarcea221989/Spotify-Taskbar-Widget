@@ -29,13 +29,16 @@ html, body {
     width: 100%;
     height: 100%;
     background-color: var(--bg-color);
-    border-radius: 10px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
-    padding: 8px 10px;
+    gap: 6px;
+    padding: 0 8px;
     -webkit-app-region: drag; /* Makes the entire widget draggable */
-    box-shadow: 0 8px 20px rgba(0,0,0,0.6);
-    backdrop-filter: blur(6px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    overflow: hidden;
 }
 
 /* --- Views --- */
@@ -56,10 +59,10 @@ html, body {
 }
 
 #album-art {
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: 4px;
     object-fit: cover;
     -webkit-app-region: no-drag; /* Exclude image from drag region */
     box-shadow: 0 2px 6px rgba(0,0,0,0.6);
@@ -73,6 +76,7 @@ html, body {
     flex-direction: column;
     justify-content: center;
     min-width: 0; /* allow ellipsis */
+    max-width: 260px;
 }
 /* Docked (compact/widget) styling - looks like Windows 11 taskbar widget */
 html.docked #widget-container {
@@ -100,7 +104,7 @@ html.docked #widget-container:hover {
 html.docked #track-info {
     display: flex;
     flex-direction: column;
-    max-width: 200px; /* Fixed width for predictable layout */
+    max-width: 220px; /* Fixed width for predictable layout */
     overflow: hidden;
     padding-right: 8px;
     flex-shrink: 0;
@@ -198,9 +202,8 @@ html.docked #like-btn svg {
 #controls {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 6px;
     margin-left: auto;
-    margin-right: auto; /* center the controls area */
 }
 
 button {
@@ -210,10 +213,10 @@ button {
     color: var(--text-primary);
     font-size: 16px;
     cursor: pointer;
-    padding: 6px;
+    padding: 4px;
     border-radius: 50%;
-    width: 36px;
-    height: 36px;
+    width: 30px;
+    height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -239,25 +242,25 @@ button:active {
 
 /* Prominent play/pause - larger and centered visually */
 #play-pause-btn {
-    width: 60px;
-    height: 60px;
-    font-size: 20px;
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
     border-radius: 50%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     background: var(--accent-color);
     color: #fff;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.35);
 }
 
 #play-pause-btn:hover { transform: scale(1.03); }
 
 /* Override for docked mode - MUST be smaller to fit 48px height */
 html.docked #play-pause-btn {
-    width: 36px !important;
-    height: 36px !important;
-    font-size: 14px !important;
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 12px !important;
     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
@@ -300,9 +303,9 @@ html.docked #logout-btn { display: none; }
 
 /* Like button styling */
 #like-btn {
-    width: 36px;
-    height: 36px;
-    font-size: 16px;
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
     border-radius: 50%;
     background: transparent;
     color: var(--text-secondary);
@@ -314,6 +317,21 @@ html.docked #logout-btn { display: none; }
 
 #like-btn svg { transition: fill 0.12s ease, stroke 0.12s ease; }
 #like-btn.liked svg { fill: var(--accent-color); stroke: none; }
+
+@media (max-width: 320px) {
+    #track-info {
+        display: none;
+    }
+
+    #controls {
+        gap: 4px;
+    }
+
+    #like-btn,
+    #logout-btn {
+        display: none;
+    }
+}
 /* Prevent drag on all controls and their children */
 #controls, #controls *, #like-btn, #like-btn * {
     -webkit-app-region: no-drag !important;

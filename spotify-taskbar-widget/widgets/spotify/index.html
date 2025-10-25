@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';">
+    <title>Spotify Widget</title>
+    <!-- Reuse main renderer styles -->
+    <link rel="stylesheet" href="../renderer/styles.css">
+    <style>
+      /* Ensure compact widget sizing */
+      body { margin: 0; background: transparent; }
+      #widget-container { width: 360px; height: 120px; }
+      .view { display: none; }
+      #player-view { display: flex; align-items: center; }
+    </style>
+  </head>
+  <body>
+    <!-- Reuse the same player markup as the main renderer but trimmed for compact view -->
+    <div id="widget-container">
+      <div id="player-view" class="view">
+          <img id="album-art" src="" alt="Album Art" />
+          <div id="track-info">
+              <div id="title">Not Playing</div>
+              <div id="artist"></div>
+          </div>
+          <div id="controls">
+              <button id="prev-btn" class="icon-btn">⏮</button>
+              <button id="play-pause-btn" class="play-btn">⏯</button>
+              <button id="next-btn" class="icon-btn">⏭</button>
+          </div>
+      </div>
+    </div>
+
+    <!-- Load the existing renderer script to reuse player logic. It expects to be at ../renderer/renderer.js -->
+    <script>
+      // Touch localStorage to simulate setup complete so renderer shows player
+      try { localStorage.setItem('spotify-widget-setup-complete', 'true'); } catch (e) {}
+    </script>
+    <script src="../renderer/renderer.js"></script>
+  </body>
+</html>
