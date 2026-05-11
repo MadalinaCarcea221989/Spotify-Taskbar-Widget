@@ -292,14 +292,14 @@ fn persist_window_state(path: &PathBuf, x: i32, y: i32, width: u32, height: u32)
 #[tauri::command]
 fn snap_to_corner(window: tauri::Window) {
     if let Ok(Some(monitor)) = window.primary_monitor() {
-        let _ = window.set_size(tauri::Size::Logical(tauri::LogicalSize::new(400.0, 30.0)));
+        let _ = window.set_size(tauri::Size::Logical(tauri::LogicalSize::new(400.0, 35.0)));
         
         let size = monitor.size();
         let scale_factor = monitor.scale_factor();
         
         // Use physical pixels for position to be precise about the taskbar gap
         let win_w_phys = (400.0 * scale_factor) as u32;
-        let win_h_phys = (30.0 * scale_factor) as u32;
+        let win_h_phys = (35.0 * scale_factor) as u32;
         let taskbar_h_phys = (monitor.size().height as i32 - monitor.work_area().size.height as i32).abs();
 
         // Snap to bottom-center
@@ -389,9 +389,9 @@ pub fn run() {
                             let _ = window.set_position(tauri::Position::Physical(
                                 tauri::PhysicalPosition::new(ws.x, ws.y)
                             ));
-                            // Do NOT restore size from state to ensure new 30px height is applied
+                            // Do NOT restore size from state to ensure new 35px height is applied
                             let _ = window.set_size(tauri::Size::Logical(
-                                tauri::LogicalSize::new(400.0, 30.0)
+                                tauri::LogicalSize::new(400.0, 35.0)
                             ));
                             restored = true;
                         }
@@ -405,7 +405,7 @@ pub fn run() {
                         let work_area = monitor.work_area();
                         let sf = monitor.scale_factor();
                         
-                        let win_h = (30.0 * sf) as f64;
+                        let win_h = (35.0 * sf) as f64;
                         let taskbar_h = (full_size.height as i32 - work_area.size.height as i32).abs() as f64;
                         
                         let padding = (12.0 * sf) as f64;

@@ -54,19 +54,19 @@ html, body {
 #player-main {
     display: flex;
     align-items: center;
-    padding: 0 6px;
-    gap: 6px;
+    padding: 0 8px;
+    gap: 8px;
     flex: 1;
     height: 100%;
 }
 
 .art-container {
-    width: 24px;
-    height: 24px;
-    min-width: 24px;
-    border-radius: 3px;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    border-radius: 4px;
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.5);
     -webkit-app-region: no-drag;
 }
 
@@ -86,21 +86,21 @@ html, body {
 }
 
 #title {
-    font-size: 10.5px;
+    font-size: 11px;
     font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    line-height: 1.1;
+    line-height: 1.2;
 }
 
 #artist {
-    font-size: 9px;
+    font-size: 9.5px;
     color: var(--text-secondary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    line-height: 1.1;
+    line-height: 1.2;
 }
 
 .action-group {
@@ -123,8 +123,8 @@ html, body {
     background: transparent;
     border: none;
     color: var(--text-secondary);
-    width: 22px;
-    height: 22px;
+    width: 26px;
+    height: 26px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -146,8 +146,8 @@ html, body {
     background: var(--text-primary);
     color: #000;
     border: none;
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     display: flex;
     align-items: center;
