@@ -1,4 +1,4 @@
-# Spotify Taskbar Widget 🎵🚀
+# Spotify Taskbar Widget 
 
 A premium, ultra-slim Spotify mini-player for the Windows taskbar. Built with **Tauri v2** and **Rust** for maximum performance and a native feel.
 
