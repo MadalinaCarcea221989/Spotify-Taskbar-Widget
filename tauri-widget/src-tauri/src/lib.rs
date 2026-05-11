@@ -290,6 +290,11 @@ fn persist_window_state(path: &PathBuf, x: i32, y: i32, width: u32, height: u32)
 }
 
 #[tauri::command]
+fn focus_window(window: tauri::Window) {
+    let _ = window.set_focus();
+}
+
+#[tauri::command]
 fn snap_to_corner(window: tauri::Window) {
     if let Ok(Some(monitor)) = window.primary_monitor() {
         let _ = window.set_size(tauri::Size::Logical(tauri::LogicalSize::new(400.0, 35.0)));
@@ -417,6 +422,9 @@ pub fn run() {
                         ));
                     }
                 }
+                let _ = window.show();
+                let _ = window.set_focus();
+                let _ = window.set_always_on_top(true);
 
                 // Listen to move/resize events and save state immediately in Rust
                 let save_path = state_path.clone();
@@ -441,7 +449,7 @@ pub fn run() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![get_access_token, authorize, spotify_fetch, exit_app, snap_to_corner, save_window_state, load_window_state])
+        .invoke_handler(tauri::generate_handler![get_access_token, authorize, spotify_fetch, exit_app, snap_to_corner, save_window_state, load_window_state, focus_window])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

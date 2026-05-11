@@ -92,6 +92,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- Auto-Focus on Hover ---
+    if (widgetContainer) {
+        widgetContainer.addEventListener('mouseenter', () => {
+            window.__TAURI__.core.invoke('focus_window').catch(() => {});
+        });
+        // Also trigger on mousemove just in case mouseenter is missed due to window state
+        widgetContainer.addEventListener('mousemove', () => {
+            // Optional: Debounce if needed, but invoke is cheap
+            window.__TAURI__.core.invoke('focus_window').catch(() => {});
+        }, { once: true }); // Only once per entry
+    }
+
     function showView(viewName) {
         Object.values(views).forEach(v => v.style.display = 'none');
         if (views[viewName]) {
