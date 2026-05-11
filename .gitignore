@@ -1,39 +1,26 @@
 # Dependencies
 node_modules/
+package-lock.json
 
-# Build output
-dist/
-build/
-release/
+# Rust / Tauri
+tauri-widget/src-tauri/target/
+tauri-widget/src-tauri/gen/
+tauri-widget/src-tauri/bin/
 
-# Local configuration
-config.json
-
-# Stored tokens
-tokens.json
-
-# User data and settings
-settings.json
-
-# Electron logs
-*.log
-.electron/
-
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# IDE files
+# OS / IDE
 .vscode/
 .idea/
-*.swp
-*.swo
+.DS_Store
+Thumbs.db
+*.log
 
-# Temporary files
-*.tmp
-*.temp
+# Personal Tokens / Secrets
+tauri-widget/src-tauri/tokens.json
+window_state.json
+
+# Build Artifacts
+*.msi
+*.exe
+*.zip
+dist/
+build/
