@@ -2,7 +2,7 @@
 
 A premium, ultra-slim Spotify mini-player for the Windows taskbar. Built with **Tauri v2** and **Rust** for maximum performance and a native feel.
 
-![App Icon](assets/app-icon-premium-square.png)
+![Spotify Taskbar Widget](./assets/header.png)
 
 ## Features ✨
 - **Perfect Fit**: Ultra-slim 30px height designed specifically for the Windows 11 taskbar.
