@@ -1,4 +1,4 @@
-# Spotify Taskbar Widget 🎵🚀
+# Spotify Taskbar Widget
 
 <p align="center">
   <img src="./assets/header.png" alt="Spotify Taskbar Widget Banner" width="600">
@@ -12,51 +12,51 @@
 
 ---
 
-A premium, **ultra-slim (35px)** Spotify mini-player designed for native desktop integration. Whether you are on **Windows 11**, **macOS**, or **Linux**, this widget stays where you need it most—right in your Taskbar or Menu Bar.
+A premium, ultra-slim (35px) Spotify mini-player designed for native desktop integration. Compatible with Windows 11, macOS, and Linux, this widget integrates into your Taskbar or Menu Bar for seamless playback control.
 
-## ✨ Why Choose This?
+## Performance Comparison
 
 | Feature | Official Spotify App | Spotify Taskbar Widget |
 | :--- | :---: | :---: |
-| **RAM Usage** | ~500MB - 1GB+ | **~50MB - 80MB** |
-| **Footprint** | Full Window | **Ultra-Slim 35px** |
-| **Tech Stack** | Electron (Heavy) | **Tauri + Rust (Light)** |
-| **Focus** | High Distraction | **Zero Distraction** |
-| **Native Feel** | Browser-in-a-box | **Native Desktop Module** |
+| RAM Usage | ~500MB - 1GB+ | **~50MB - 80MB** |
+| Footprint | Full Window | **Ultra-Slim 35px** |
+| Tech Stack | Electron | **Tauri + Rust** |
+| System Impact | High | **Minimal** |
+| Integration | Standard Window | **Native Desktop Module** |
 
-## 📸 Screenshots
+## Screenshots
 <p align="center">
   <img src="./assets/screenshot-taskbar.png" width="800" alt="Taskbar Integration">
   <br>
-  <em>Seamlessly integrated into the Windows 11 taskbar.</em>
+  <em>Integrated into the Windows 11 taskbar.</em>
 </p>
 
 <p align="center">
   <img src="./assets/screenshot-widget.png" width="500" alt="Widget Detail">
   <br>
-  <em>Dynamic accent colors and polished UI.</em>
+  <em>Dynamic accent colors and polished interface.</em>
 </p>
 
-## 🔥 Features
-- **🎯 Perfect Fit**: Specifically calibrated 35px height for the Windows 11 taskbar.
-- **🌍 Multi-OS Aware**: Automatically snaps to the Bottom (Windows) or Top-Right (macOS/Linux).
-- **🎨 Dynamic Theming**: AI-driven color extraction from album art for a gorgeous, integrated look.
-- **⚡ Blazing Fast**: Built with Rust for near-instant responsiveness and zero bloat.
-- **📥 Close-to-Tray**: Runs quietly in the background without cluttering your workspace.
-- **🎹 System Integration**: Supports global media keys and "Auto-Focus on Hover."
+## Key Features
+- **Precision Fit**: Specifically calibrated 35px height for the Windows 11 taskbar.
+- **Cross-Platform**: Intelligent positioning for Windows, macOS, and Linux.
+- **Dynamic Theming**: Automatic color extraction from album art for visual integration.
+- **High Performance**: Built with Rust for immediate responsiveness and low resource overhead.
+- **Background Operation**: Runs in the system tray to maintain a clean workspace.
+- **System Integration**: Support for global media keys and auto-focus functionality.
 
-## 🧠 How it Works
-This widget acts as a high-performance **remote bridge** for your Spotify account. It uses the official Spotify Web API to sync playback across all your devices while consuming a fraction of the resources.
+## Technical Overview
+The widget serves as a high-performance remote bridge for your Spotify account. Utilizing the official Spotify Web API, it synchronizes playback across devices while consuming significantly fewer resources than the standard desktop client.
 
-## 📦 Installation
-1. Head over to the [**Releases**](https://github.com/MadalinaCarcea221989/Spotify-Taskbar-Widget/releases) page.
-2. Download the installer for your OS:
-   - **Windows**: `.exe` or `.msi`
-   - **macOS**: `.dmg` (coming soon via Cloud Build)
-   - **Linux**: `.deb` (coming soon via Cloud Build)
-3. Launch and log in to Spotify.
+## Installation
+1. Visit the [Releases](https://github.com/MadalinaCarcea221989/Spotify-Taskbar-Widget/releases) page.
+2. Download the installer for your operating system:
+   - Windows: .exe or .msi
+   - macOS: .dmg
+   - Linux: .deb
+3. Launch the application and authenticate with your Spotify account.
 
-## 🛠️ Tech Stack
+## Tech Stack
 <p align="left">
   <img src="https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white" alt="Rust">
   <img src="https://img.shields.io/badge/Tauri-FFC131?style=for-the-badge&logo=tauri&logoColor=white" alt="Tauri">
@@ -64,10 +64,10 @@ This widget acts as a high-performance **remote bridge** for your Spotify accoun
   <img src="https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white" alt="CSS">
 </p>
 
-## 📄 License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## License
+This project is licensed under the MIT License. See the LICENSE file for more information.
 
 ---
 <p align="center">
-  Built with ❤️ for music lovers who care about their RAM.
+  Built for performance and desktop efficiency.
 </p>
