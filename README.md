@@ -46,7 +46,9 @@ A premium, ultra-slim (35px) Spotify mini-player designed for native desktop int
 - **System Integration**: Support for global media keys and auto-focus functionality.
 
 ## Technical Overview
-The widget serves as a high-performance remote bridge for your Spotify account. Utilizing the official Spotify Web API, it synchronizes playback across devices while consuming significantly fewer resources than the standard desktop client.
+The widget serves as a high-performance remote bridge for your Spotify account. It operates as a standalone application and **does not require the official Spotify desktop client to be open**. 
+
+Utilizing the official Spotify Web API, it synchronizes playback across all your connected devices (mobile, smart speakers, or web player) while consuming significantly fewer resources than the standard desktop client.
 
 ## Installation
 1. Visit the [Releases](https://github.com/MadalinaCarcea221989/Spotify-Taskbar-Widget/releases) page.
