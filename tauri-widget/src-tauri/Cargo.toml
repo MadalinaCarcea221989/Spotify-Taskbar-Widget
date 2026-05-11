@@ -1,0 +1,31 @@
+[package]
+name = "spotify-taskbar-widget"
+version = "0.1.0"
+description = "Spotify Taskbar Widget"
+authors = ["Madalina Carcea"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+name = "spotify_taskbar_widget_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+reqwest = { version = "0.11", features = ["json"] }
+tiny_http = "0.12"
+tokio = { version = "1.0", features = ["full"] }
+rand = "0.8"
+sha2 = "0.10"
+base64 = "0.21"
+urlencoding = "2.1"

@@ -1,0 +1,263 @@
+:root {
+    --bg-color: rgba(20, 20, 20, 0.85);
+    --accent-color: #1DB954;
+    --text-primary: #FFFFFF;
+    --text-secondary: rgba(255, 255, 255, 0.65);
+    --surface-hover: rgba(255, 255, 255, 0.1);
+    --border-color: rgba(255, 255, 255, 0.08);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: transparent;
+    font-family: 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
+    color: var(--text-primary);
+    user-select: none;
+}
+
+#widget-container {
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-color);
+    backdrop-filter: blur(28px) saturate(200%);
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    -webkit-app-region: drag;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.view {
+    width: 100%;
+    height: 100%;
+    display: none;
+    flex-direction: column;
+}
+
+/* --- Player View --- */
+#player-view {
+    display: flex;
+    position: relative;
+}
+
+#player-main {
+    display: flex;
+    align-items: center;
+    padding: 0 6px;
+    gap: 6px;
+    flex: 1;
+    height: 100%;
+}
+
+.art-container {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    border-radius: 3px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    -webkit-app-region: no-drag;
+}
+
+#album-art {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease, opacity 0.4s ease;
+}
+
+#track-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+#title {
+    font-size: 10.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.1;
+}
+
+#artist {
+    font-size: 9px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.1;
+}
+
+.action-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    -webkit-app-region: no-drag;
+}
+
+#controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.04);
+    padding: 2px 6px;
+    border-radius: 20px;
+}
+
+.icon-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.icon-btn:hover {
+    background: var(--surface-hover);
+    color: var(--text-primary);
+}
+
+.icon-btn:active {
+    transform: scale(0.9);
+}
+
+.play-btn {
+    background: var(--text-primary);
+    color: #000;
+    border: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.play-btn:hover {
+    transform: scale(1.1);
+}
+
+.close-btn {
+    width: 20px;
+    height: 20px;
+    opacity: 0.4;
+}
+
+.close-btn:hover {
+    opacity: 1;
+}
+
+/* --- Integrated Progress Bar --- */
+#progress-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    z-index: 100;
+    transition: height 0.2s;
+}
+
+#progress-container:hover {
+    height: 6px;
+}
+
+#progress-bar {
+    height: 100%;
+    background: var(--accent-color);
+    width: 0%;
+    transition: width 0.1s linear, background-color 0.5s ease;
+}
+
+#seek-bar {
+    position: absolute;
+    top: -5px; /* Increase hit area */
+    left: 0;
+    width: 100%;
+    height: 12px;
+    appearance: none;
+    background: transparent;
+    outline: none;
+    cursor: pointer;
+    z-index: 2;
+}
+
+#seek-bar::-webkit-slider-thumb {
+    appearance: none;
+    width: 0;
+    height: 0;
+}
+
+#seek-fill {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 100%;
+    background: var(--accent-color);
+    z-index: 1;
+    pointer-events: none;
+    transition: width 0.1s linear;
+}
+
+/* Auth View Compact */
+#auth-view {
+    justify-content: center;
+    align-items: center;
+    padding: 0 20px;
+}
+.auth-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.auth-content h1, .auth-content p { display: none; }
+.primary-btn {
+    padding: 6px 16px;
+    border-radius: 16px;
+    font-size: 12px;
+}
+
+#like-btn.liked { color: var(--accent-color); }
+#like-btn.liked svg { fill: var(--accent-color); }
+
+#shuffle-btn.active, #repeat-btn.active {
+    color: var(--accent-color);
+}
+#repeat-btn.active-track {
+    color: var(--accent-color);
+    position: relative;
+}
+#repeat-btn.active-track::after {
+    content: '1';
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    font-size: 7px;
+    font-weight: bold;
+    color: var(--accent-color);
+}

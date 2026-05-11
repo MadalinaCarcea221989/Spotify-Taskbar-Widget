@@ -1,96 +1,33 @@
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/R6R71MYWI0)
+# Spotify Taskbar Widget 🎵🚀
 
+A premium, ultra-slim Spotify mini-player for the Windows taskbar. Built with **Tauri v2** and **Rust** for maximum performance and a native feel.
 
-# Spotify Taskbar Widget
+![App Icon](assets/app-icon-premium-square.png)
 
-A beautiful, lightweight Spotify mini-player for Windows 11 that sits in your taskbar like a native widget. Control your music, see album art, and use playback controls without switching windows.
+## Features ✨
+- **Perfect Fit**: Ultra-slim 30px height designed specifically for the Windows 11 taskbar.
+- **Background Mode**: Close the window and it keeps running in your system tray (Hidden Icons).
+- **Dynamic Theming**: Automatically extracts accent colors from album art for a gorgeous, integrated look.
+- **Global Control**: Supports system media keys (Play/Pause/Next/Prev).
+- **Fast & Light**: Native Rust backend with zero Electron overhead.
+- **Smart Positioning**: Automatically detects taskbar size and scaling to snap perfectly to the bottom of your screen.
 
-![Spotify Taskbar Widget](assets/store/screenshots/screenshot-1.png)
+## Installation 📦
+1. Download the latest `Spotify Taskbar Widget_x64-setup.exe` from the [Releases](https://github.com/MadalinaCarcea221989/Spotify-Taskbar-Widget/releases) page.
+2. Run the installer.
+3. Launch the widget and connect your Spotify account.
 
-## Features
+## Development 🛠️
+To build the project from source:
 
-- 🎵 **Real-time Spotify integration** - Album art, track info, playback state
-- 🎨 **Native Windows 11 design** - Acrylic effects, rounded corners, smooth animations
-- 📍 **Smart taskbar positioning** - Locks into taskbar or floats as needed
-- 🎮 **Full playback controls** - Play/pause, next/previous, like/unlike tracks
-- 🔒 **Secure authentication** - PKCE flow, encrypted token storage
-- 🔔 **Smart notifications** - Toast notifications with controls
-- ⚙️ **Customizable settings** - Theme, behavior, account management
-- 🚀 **Auto-start & tray** - System tray menu, auto-hide options
-
-## Installation
-
-### Option 1: Download Pre-built Installer (Recommended)
-
-1. Go to [Releases](https://github.com/MadalinaCarcea221989/Spotify-Taskbar-Widget/releases)
-2. Download the latest `Spotify Taskbar Widget Setup X.X.X.exe`
-3. Run the installer and follow the setup wizard
-4. The widget will launch automatically after installation
-
-### Option 2: Build from Source
-
-1. Clone the repository:
-
+1. Install [Rust](https://rustup.rs/) and [Node.js](https://nodejs.org/).
+2. Clone the repository.
+3. Navigate to `tauri-widget`:
    ```bash
-   git clone https://github.com/MadalinaCarcea221989/Spotify-Taskbar-Widget.git
-   cd Spotify-Taskbar-Widget
-   ```
-
-2. Install dependencies:
-
-   ```bash
-   cd spotify-taskbar-widget
    npm install
+   npm run tauri build
    ```
+4. Find your binaries in `src-tauri/target/release/bundle/`.
 
-3. Set up Spotify app:
-   - Create a Spotify app at [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
-   - Copy `config.example.json` to `config.json`
-   - Add your Spotify app's Client ID
-
-4. Run the widget:
-
-   ```bash
-   npm start
-   ```
-
-## Usage
-
-- The widget appears in your taskbar after first launch
-- Click the widget to open the full control panel
-- Use the system tray icon to hide/show or quit
-- Right-click for quick access to settings
-
-## Building
-
-To create your own installer:
-
-```bash
-cd spotify-taskbar-widget
-npm run dist
-```
-
-The installer will be created in `spotify-taskbar-widget/dist/`
-
-## Security & Privacy
-
-- Spotify tokens are encrypted at rest using AES
-- No data is sent to external servers except Spotify's official API
-- Configuration files are excluded from version control
-
-## Requirements
-
-- Windows 10/11
-- Spotify Premium account (for playback control)
-- Internet connection for Spotify API access
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit issues and pull requests.
-
-## License
-
-MIT License - see [LICENSE](LICENSE) for details
-
----
-Built with Electron, maintained by [MadalinaCarcea221989](https://github.com/MadalinaCarcea221989)
+## License 📄
+Distributed under the MIT License. See `LICENSE` for more information.
