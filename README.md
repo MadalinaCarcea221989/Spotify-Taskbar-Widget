@@ -13,6 +13,7 @@ A premium, ultra-slim Spotify mini-player for the Windows taskbar. Built with **
 
 ## Features ✨
 - **Perfect Fit**: Ultra-slim 35px height designed specifically for the Windows 11 taskbar (standard 48px).
+- **Cross-Platform**: Intelligent positioning for Windows (Taskbar), macOS (Menu Bar area), and Linux (Top/Bottom Bar).
 - **Background Mode**: Close the window and it keeps running in your system tray (Hidden Icons).
 - **Dynamic Theming**: Automatically extracts accent colors from album art for a gorgeous, integrated look.
 - **Global Control**: Supports system media keys (Play/Pause/Next/Prev).

@@ -403,8 +403,9 @@ pub fn run() {
                     }
                 }
 
+                #[cfg(target_os = "windows")]
                 if !restored {
-                    // First launch: snap to bottom-left with dynamic taskbar detection
+                    // Windows: snap to bottom-left taskbar area
                     if let Ok(Some(monitor)) = window.primary_monitor() {
                         let full_size = monitor.size();
                         let work_area = monitor.work_area();
@@ -422,6 +423,25 @@ pub fn run() {
                         ));
                     }
                 }
+
+                #[cfg(not(target_os = "windows"))]
+                if !restored {
+                    // macOS/Linux: snap to top-right (near Menu Bar)
+                    if let Ok(Some(monitor)) = window.primary_monitor() {
+                        let full_size = monitor.size();
+                        let sf = monitor.scale_factor();
+                        let win_w = (400.0 * sf) as f64;
+                        let padding = (20.0 * sf) as f64;
+                        
+                        let x = (full_size.width as f64 - win_w - padding) as i32;
+                        let y = padding as i32;
+                        
+                        let _ = window.set_position(tauri::Position::Physical(
+                            tauri::PhysicalPosition::new(x, y)
+                        ));
+                    }
+                }
+
                 let _ = window.show();
                 let _ = window.set_focus();
                 let _ = window.set_always_on_top(true);
