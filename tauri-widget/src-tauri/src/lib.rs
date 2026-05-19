@@ -289,6 +289,23 @@ fn persist_window_state(path: &PathBuf, x: i32, y: i32, width: u32, height: u32)
     }
 }
 
+fn is_position_valid_on_monitors(window: &tauri::WebviewWindow, x: i32, y: i32) -> bool {
+    // Check if position is within any current monitor's bounds
+    if let Ok(monitors) = window.available_monitors() {
+        for monitor in monitors {
+            let pos = monitor.position();
+            let size = monitor.size();
+            
+            // Check if position is within this monitor's bounds (with some padding tolerance)
+            if x >= pos.x && x < pos.x + size.width as i32 && 
+               y >= pos.y && y < pos.y + size.height as i32 {
+                return true;
+            }
+        }
+    }
+    false
+}
+
 #[tauri::command]
 fn focus_window(window: tauri::Window) {
     let _ = window.set_focus();
@@ -299,7 +316,6 @@ fn snap_to_corner(window: tauri::Window) {
     if let Ok(Some(monitor)) = window.primary_monitor() {
         let _ = window.set_size(tauri::Size::Logical(tauri::LogicalSize::new(400.0, 35.0)));
         
-        let size = monitor.size();
         let scale_factor = monitor.scale_factor();
         
         // Use physical pixels for position to be precise about the taskbar gap
@@ -391,14 +407,17 @@ pub fn run() {
                 if let Some(ref path) = state_path {
                     if let Ok(data) = fs::read_to_string(path) {
                         if let Ok(ws) = serde_json::from_str::<WindowState>(&data) {
-                            let _ = window.set_position(tauri::Position::Physical(
-                                tauri::PhysicalPosition::new(ws.x, ws.y)
-                            ));
-                            // Do NOT restore size from state to ensure new 35px height is applied
-                            let _ = window.set_size(tauri::Size::Logical(
-                                tauri::LogicalSize::new(400.0, 35.0)
-                            ));
-                            restored = true;
+                            // Validate that saved position is on a current monitor
+                            if is_position_valid_on_monitors(&window, ws.x, ws.y) {
+                                let _ = window.set_position(tauri::Position::Physical(
+                                    tauri::PhysicalPosition::new(ws.x, ws.y)
+                                ));
+                                // Do NOT restore size from state to ensure new 35px height is applied
+                                let _ = window.set_size(tauri::Size::Logical(
+                                    tauri::LogicalSize::new(400.0, 35.0)
+                                ));
+                                restored = true;
+                            }
                         }
                     }
                 }
