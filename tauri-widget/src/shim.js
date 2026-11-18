@@ -70,6 +70,10 @@ window.player = {
     cleanupListeners: () => {},
     logout: () => invoke('logout'),
 
+    // Mirrors the current track into the OS media session (Windows media
+    // controls). Pass null when nothing is playing.
+    updateMediaSession: (info) => invoke('update_media_session', { info }).catch(() => {}),
+
     getNowPlaying: async () => {
         const res = await nativeFetch('/me/player');
         if (res.error) return { status: res.error.status === 401 ? 'unauthorized' : 'error', message: res.error.message };
@@ -83,7 +87,15 @@ window.player = {
             shuffleState: res.data.shuffle_state,
             repeatState: res.data.repeat_state,
             activeDeviceId: res.data.device?.id,
-            track: { id: item.id, title: item.name, artists: item.artists.map(a => a.name).join(', '), albumArtUrl: item.album.images[0]?.url }
+            progressMs: res.data.progress_ms,
+            track: {
+                id: item.id,
+                title: item.name,
+                artists: item.artists.map(a => a.name).join(', '),
+                album: item.album.name,
+                durationMs: item.duration_ms,
+                albumArtUrl: item.album.images[0]?.url
+            }
         };
     },
 

@@ -11,6 +11,8 @@ use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 use keyring::Entry;
 use tauri_plugin_global_shortcut::{Code, Shortcut, ShortcutState};
 
+mod media_session;
+
 const KEYRING_SERVICE: &str = "com.madal.spotify-taskbar-widget";
 const KEYRING_USER: &str = "spotify-tokens";
 
@@ -41,6 +43,10 @@ struct AppState {
     // bar can't drift from its resting spot across an expand/collapse cycle.
     collapsed_y: std::sync::Mutex<Option<i32>>,
 }
+
+/// The OS media session (Windows media controls). `None` when it couldn't be
+/// created or on platforms that don't have one yet; updates are then no-ops.
+struct MediaState(std::sync::Mutex<Option<media_session::MediaSession>>);
 
 /// Tokens are stored in the OS credential store (Credential Manager / Keychain /
 /// Secret Service) rather than on disk, so a stolen filesystem snapshot alone
@@ -280,6 +286,21 @@ fn exit_app(app: AppHandle) {
     app.exit(0);
 }
 
+/// Mirrors the current track and play state into the OS media session, so the
+/// Windows media flyout, lock screen and apps like Fenn can show and control it.
+/// `info` is `null` when nothing is playing.
+#[tauri::command]
+fn update_media_session(
+    state: State<'_, MediaState>,
+    info: Option<media_session::TrackInfo>,
+) -> Result<(), String> {
+    let mut guard = state.0.lock().map_err(|e| e.to_string())?;
+    match guard.as_mut() {
+        Some(session) => session.update(info.as_ref()),
+        None => Ok(()),
+    }
+}
+
 #[tauri::command]
 async fn logout(state: State<'_, AppState>) -> Result<(), String> {
     *state.tokens.lock().await = None;
@@ -491,6 +512,31 @@ pub fn run() {
                 collapsed_y: std::sync::Mutex::new(None),
             });
 
+            // --- OS media session (Windows media controls) ---
+            // Registers the widget so Fenn, the volume flyout and the lock screen
+            // can show what's playing. Their play/pause/next/previous buttons come
+            // back as the same "media-key" events the global media keys emit, so
+            // the frontend handles them with the code it already has.
+            #[cfg(target_os = "windows")]
+            let os_media = app
+                .get_webview_window("main")
+                .and_then(|w| w.hwnd().ok())
+                .and_then(|hwnd| {
+                    let handle = app.handle().clone();
+                    match media_session::MediaSession::new(hwnd.0, move |action| {
+                        let _ = handle.emit("media-key", action);
+                    }) {
+                        Ok(session) => Some(session),
+                        Err(e) => {
+                            eprintln!("Media session unavailable: {e}");
+                            None
+                        }
+                    }
+                });
+            #[cfg(not(target_os = "windows"))]
+            let os_media: Option<media_session::MediaSession> = None;
+            app.manage(MediaState(std::sync::Mutex::new(os_media)));
+
             // --- System Tray Setup ---
             let quit_i = tauri::menu::MenuItem::with_id(app, "quit", "Quit Spotify Widget", true, None::<&str>).unwrap();
             let show_i = tauri::menu::MenuItem::with_id(app, "show", "Show Player", true, None::<&str>).unwrap();
@@ -642,7 +688,7 @@ pub fn run() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![get_access_token, authorize, spotify_fetch, exit_app, logout, snap_to_corner, save_window_state, load_window_state, focus_window, set_panel_expanded])
+        .invoke_handler(tauri::generate_handler![get_access_token, authorize, spotify_fetch, exit_app, update_media_session, logout, snap_to_corner, save_window_state, load_window_state, focus_window, set_panel_expanded])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

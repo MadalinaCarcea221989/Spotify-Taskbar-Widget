@@ -31,3 +31,8 @@ base64 = "0.21"
 urlencoding = "2.1"
 keyring = { version = "4", features = ["apple-native-keyring-store"] }
 tauri-plugin-global-shortcut = "2"
+
+# Registers the widget with Windows' media controls (SMTC) so apps like Fenn,
+# the volume flyout and the lock screen can show and control what's playing.
+[target.'cfg(target_os = "windows")'.dependencies]
+souvlaki = "0.8"

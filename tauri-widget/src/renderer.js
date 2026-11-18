@@ -189,35 +189,28 @@ document.addEventListener('DOMContentLoaded', () => {
         return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) };
     }
 
-    // --- Media Key Integration: Media Session API ---
-    function setupMediaSession() {
-        if ('mediaSession' in navigator) {
-            navigator.mediaSession.setActionHandler('play', () => { window.player.play(); immediateRefresh(100); });
-            navigator.mediaSession.setActionHandler('pause', () => { window.player.pause(); immediateRefresh(100); });
-            navigator.mediaSession.setActionHandler('previoustrack', () => { window.player.prev(); immediateRefresh(300); });
-            navigator.mediaSession.setActionHandler('nexttrack', () => { window.player.next(); immediateRefresh(300); });
-            
-            // Keep media session alive with a silent dummy audio if needed
-            const dummyAudio = document.getElementById('dummy-audio');
-            dummyAudio.volume = 0.01;
-            
-            // Trigger playback on first user interaction to unlock audio
-            document.addEventListener('click', () => {
-                dummyAudio.play().catch(() => {});
-            }, { once: true });
+    // --- OS media session (Windows media controls, Fenn, lock screen) ---
+    // The widget plays no audio itself, so a web Media Session never reaches the
+    // OS: Windows only lists an app that is actually playing. Instead Rust
+    // registers a native session and we push every real poll result into it.
+    // Its play/pause/next/previous buttons come back through the existing
+    // "media-key" listener below.
+    function syncOsMediaSession(data) {
+        if (!window.player.updateMediaSession) return;
+        if (!data || !data.track) {
+            window.player.updateMediaSession(null);
+            return;
         }
-    }
-
-    function updateMediaSessionMetadata(track, isPlaying) {
-        if ('mediaSession' in navigator && track) {
-            navigator.mediaSession.metadata = new MediaMetadata({
-                title: track.title,
-                artist: track.artists,
-                album: '',
-                artwork: [{ src: track.albumArtUrl, sizes: '512x512', type: 'image/png' }]
-            });
-            navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
-        }
+        const { track, isPlaying, progressMs } = data;
+        window.player.updateMediaSession({
+            title: track.title || '',
+            artist: track.artists || '',
+            album: track.album || '',
+            coverUrl: track.albumArtUrl || '',
+            durationMs: track.durationMs || 0,
+            positionMs: progressMs || 0,
+            isPlaying: !!isPlaying
+        });
     }
 
     function updatePlayerUI(data) {
@@ -242,7 +235,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update art and accent color
         if (albumArtEl.src !== track.albumArtUrl) {
             updateAccentColor(track.albumArtUrl);
-            updateMediaSessionMetadata(track, isPlaying);
             albumArtEl.style.transform = 'scale(0.9)';
             albumArtEl.style.opacity = '0.5';
             setTimeout(() => {
@@ -334,6 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     break;
                 case 'playing':
                     updatePlayerUI(result);
+                    syncOsMediaSession(result);
                     showView('player');
                     // Use active polling when playing
                     currentPollingInterval = isWindowVisible ? POLLING_INTERVAL_ACTIVE : POLLING_INTERVAL_HIDDEN;
@@ -341,6 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 case 'idle':
                 case 'no-device':
                     updatePlayerUI(null);
+                    syncOsMediaSession(null);
                     showView('player');
                     // Slower polling when idle or no device
                     currentPollingInterval = isWindowVisible ? POLLING_INTERVAL_IDLE : POLLING_INTERVAL_HIDDEN;
@@ -1049,7 +1043,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize
     loadCachedState();
-    setupMediaSession();
     fetchNowPlaying();
     // and initial like state
     refreshLikeState();
