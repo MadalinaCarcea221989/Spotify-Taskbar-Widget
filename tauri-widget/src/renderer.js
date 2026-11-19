@@ -509,15 +509,52 @@ document.addEventListener('DOMContentLoaded', () => {
     let anyPanelOpen = false;
     let panelCloseTimeout = null;
 
+    // Dragging the bar while a panel is expanded would move the window without
+    // Rust's collapsed_y baseline knowing about it, so closing afterward would
+    // snap back to the stale pre-drag position. Disabling drag while any panel
+    // is open avoids that class of desync entirely.
+    function setAnyPanelOpen(open) {
+        anyPanelOpen = open;
+        widgetContainer.classList.toggle('panel-open', open);
+    }
+
     function closeAllPanels() {
         if (devicePanelOpen) closeDevicePanel();
         if (playlistPanelOpen) closePlaylistPanel();
     }
 
+    // set_panel_expanded calls a Rust command that isn't guaranteed to run in the
+    // order it was invoked from JS if two calls overlap (e.g. closing one panel
+    // while opening another, or resizing the device popup mid-open). Chaining
+    // every call through one promise forces them to execute strictly in the
+    // order they were requested, which is what the window-position math assumes.
+    let panelInvokeChain = Promise.resolve();
+    function invokeSetPanelExpanded(args) {
+        panelInvokeChain = panelInvokeChain.then(() =>
+            window.__TAURI__.core.invoke('set_panel_expanded', args).catch(() => {})
+        );
+        return panelInvokeChain;
+    }
+
     // --- Devices: floating popup card ---
     let devicePanelOpen = false;
+    let deviceOpenToken = 0; // invalidates a stale open session's async work (getDevices, resize)
+    const DEVICE_POPUP_COLLAPSED_HEIGHT = 40; // must match Rust's PANEL_COLLAPSED_HEIGHT
+    const DEVICE_POPUP_MARGIN = 12; // space above/below the card within the expanded window
 
-    function renderDeviceRows(devices) {
+    // Shrinks the window to exactly fit the popup card's real rendered height,
+    // instead of a fixed guess — otherwise the outer widget frame shows as empty
+    // space around a smaller card, looking like a box within a box.
+    function resizeDevicePopupToFit(token) {
+        if (token !== deviceOpenToken) return; // a newer open (or a close) superseded this one
+        const card = devicePanel.querySelector('.device-popup-card');
+        if (!card) return;
+        const target = Math.round(DEVICE_POPUP_COLLAPSED_HEIGHT + card.offsetHeight + DEVICE_POPUP_MARGIN);
+        invokeSetPanelExpanded({ expanded: true, height: target });
+    }
+
+    function renderDeviceRows(devices, token) {
+        if (token !== deviceOpenToken) return; // a newer open (or a close) superseded this one
         const card = document.createElement('div');
         card.className = 'device-popup-card';
 
@@ -558,34 +595,43 @@ document.addEventListener('DOMContentLoaded', () => {
         const left = Math.max(8, Math.min(containerRect.width - cardWidth - 8, caretX - cardWidth / 2));
         card.style.left = `${left}px`;
         card.style.setProperty('--caret-left', `${caretX - left}px`);
+        resizeDevicePopupToFit(token);
     }
 
     async function openDevicePanel() {
         closePlaylistPanel();
+        const token = ++deviceOpenToken; // invalidates any still-in-flight previous open
         devicePanelOpen = true;
-        anyPanelOpen = true;
+        setAnyPanelOpen(true);
         devicesBtn.classList.add('active');
-        await window.__TAURI__.core.invoke('set_panel_expanded', { expanded: true });
+        // Expand generously at first so the card can render at its natural size
+        // (it's clamped by the window's available height); resizeDevicePopupToFit()
+        // then shrinks the window to match once we know the real content height.
+        await invokeSetPanelExpanded({ expanded: true, height: 180 });
+        if (token !== deviceOpenToken) return; // closed (or reopened) while this was in flight
         devicePanel.style.display = 'flex';
         devicePanel.innerHTML = `<div class="device-popup-card">${panelEmptyHtml('Loading…')}</div>`;
+        resizeDevicePopupToFit(token);
 
         const res = await window.player.getDevices();
-        if (!devicePanelOpen) return; // panel was closed while this was in flight
+        if (token !== deviceOpenToken) return; // panel was closed (or reopened) while this was in flight
         if (res?.error) {
             devicePanel.innerHTML = `<div class="device-popup-card">${panelEmptyHtml('Could not load devices')}</div>`;
+            resizeDevicePopupToFit(token);
             return;
         }
-        renderDeviceRows(res.data?.devices);
+        renderDeviceRows(res.data?.devices, token);
     }
 
     function closeDevicePanel() {
         if (!devicePanelOpen) return;
+        deviceOpenToken++; // invalidate any in-flight open session
         devicePanelOpen = false;
         devicesBtn.classList.remove('active');
         devicePanel.style.display = 'none';
         if (!playlistPanelOpen) {
-            anyPanelOpen = false;
-            window.__TAURI__.core.invoke('set_panel_expanded', { expanded: false }).catch(() => {});
+            setAnyPanelOpen(false);
+            invokeSetPanelExpanded({ expanded: false });
         }
     }
 
@@ -596,6 +642,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Playlists panel: search songs, browse playlists (incl. Liked Songs), drill into a playlist to pick a song ---
     let playlistPanelOpen = false;
+    let playlistOpenToken = 0; // invalidates stale async work across open/close/track-navigation
     let playlistView = 'list'; // 'list' | 'tracks'
     let cachedPlaylists = null;
     let currentPlaylist = null;
@@ -723,7 +770,11 @@ document.addEventListener('DOMContentLoaded', () => {
             .filter(uri => uri && uri !== track.uri)
             .slice(0, 8);
         for (const uri of uris) {
-            await window.player.queueTrack(uri, deviceId);
+            try {
+                await window.player.queueTrack(uri, deviceId);
+            } catch {
+                // Best-effort background queueing; one failed track shouldn't stop the rest.
+            }
         }
     }
 
@@ -748,12 +799,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function openPlaylistTracks(playlist) {
+        const token = ++playlistOpenToken; // also invalidates a same-playlist fetch already in flight
         currentPlaylist = playlist;
         playlistView = 'tracks';
         playlistPanel.innerHTML =
             `<div class="panel-header clickable" id="playlist-back"><span class="back-chevron"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></span>${playlist.name}</div>` +
             `<div class="panel-body" id="playlist-body">${panelEmptyHtml('Loading…')}</div>`;
         document.getElementById('playlist-back').addEventListener('click', () => {
+            playlistOpenToken++; // invalidate any in-flight fetch for the playlist we're leaving
             playlistView = 'list';
             renderPlaylistListView();
         });
@@ -761,7 +814,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const res = playlist.liked
             ? await window.player.getLikedSongs()
             : await window.player.getPlaylistTracks(playlist.id);
-        if (playlistView !== 'tracks' || currentPlaylist !== playlist) return; // navigated away while loading
+        if (token !== playlistOpenToken) return; // navigated away (or panel closed/reopened) while loading
         const body = document.getElementById('playlist-body');
         if (res?.error) {
             body.innerHTML = panelEmptyHtml('Could not load songs');
@@ -792,11 +845,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function openPlaylistPanel() {
         closeDevicePanel();
+        const token = ++playlistOpenToken; // invalidates any still-in-flight previous open
         playlistPanelOpen = true;
-        anyPanelOpen = true;
+        setAnyPanelOpen(true);
         playlistView = 'list';
         playlistsBtn.classList.add('active');
-        await window.__TAURI__.core.invoke('set_panel_expanded', { expanded: true });
+        await invokeSetPanelExpanded({ expanded: true });
+        if (token !== playlistOpenToken) return; // closed (or reopened) while this was in flight
         playlistPanel.style.display = 'flex';
 
         if (cachedPlaylists) {
@@ -804,7 +859,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             playlistPanel.innerHTML = `<div class="panel-header">Playlists</div><div class="panel-body">${panelEmptyHtml('Loading…')}</div>`;
             const res = await window.player.getPlaylists();
-            if (!playlistPanelOpen) return; // closed while loading
+            if (token !== playlistOpenToken) return; // closed (or reopened) while loading
             if (res?.error) {
                 playlistPanel.innerHTML = `<div class="panel-header">Playlists</div><div class="panel-body">${panelEmptyHtml('Could not load playlists')}</div>`;
                 return;
@@ -816,12 +871,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function closePlaylistPanel() {
         if (!playlistPanelOpen) return;
+        playlistOpenToken++; // invalidate any in-flight open/track-fetch session
         playlistPanelOpen = false;
         playlistsBtn.classList.remove('active');
         playlistPanel.style.display = 'none';
         if (!devicePanelOpen) {
-            anyPanelOpen = false;
-            window.__TAURI__.core.invoke('set_panel_expanded', { expanded: false }).catch(() => {});
+            setAnyPanelOpen(false);
+            invokeSetPanelExpanded({ expanded: false });
         }
     }
 
@@ -848,10 +904,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const CTRL_SCALE_MAX = 1;
     const ACTION_GROUP_NATURAL_WIDTH = 271;
 
-    function applyCtrlScale(scale) {
+    let splitCurrentScale = 1;
+
+    // persist=false during a drag: localStorage.setItem is synchronous and can run
+    // at pointermove frequency (100Hz+ on precision trackpads), so only the CSS
+    // variable updates live; the final value is persisted once on release.
+    function applyCtrlScale(scale, persist = true) {
         const clamped = Math.max(CTRL_SCALE_MIN, Math.min(CTRL_SCALE_MAX, scale));
         document.documentElement.style.setProperty('--ctrl-scale', clamped);
-        localStorage.setItem(CTRL_SCALE_KEY, clamped);
+        splitCurrentScale = clamped;
+        if (persist) localStorage.setItem(CTRL_SCALE_KEY, clamped);
         return clamped;
     }
 
@@ -867,7 +929,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         e.stopPropagation();
         splitDragStartX = e.clientX;
-        splitDragStartScale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ctrl-scale')) || 1;
+        splitDragStartScale = splitCurrentScale;
         splitHandle.classList.add('dragging');
         splitHandle.setPointerCapture(e.pointerId);
     });
@@ -875,12 +937,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!splitHandle.hasPointerCapture(e.pointerId)) return;
         const deltaX = e.clientX - splitDragStartX;
         // Dragging right shrinks the buttons (title grows); dragging left grows them back.
-        applyCtrlScale(splitDragStartScale - deltaX / ACTION_GROUP_NATURAL_WIDTH);
+        applyCtrlScale(splitDragStartScale - deltaX / ACTION_GROUP_NATURAL_WIDTH, false);
     });
-    splitHandle.addEventListener('pointerup', (e) => {
+    function endSplitDrag(e) {
         splitHandle.classList.remove('dragging');
-        splitHandle.releasePointerCapture(e.pointerId);
-    });
+        if (splitHandle.hasPointerCapture(e.pointerId)) splitHandle.releasePointerCapture(e.pointerId);
+        localStorage.setItem(CTRL_SCALE_KEY, splitCurrentScale);
+    }
+    // pointercancel fires instead of pointerup when the OS revokes capture mid-drag
+    // (e.g. a system gesture or an alt-tab) — without handling it too, ".dragging"
+    // could stay stuck highlighted until the next full drag cycle.
+    splitHandle.addEventListener('pointerup', endSplitDrag);
+    splitHandle.addEventListener('pointercancel', endSplitDrag);
 
     likeBtn.addEventListener('click', async () => {
         const res = await window.player.toggleLike();

@@ -368,18 +368,19 @@ fn focus_window(window: tauri::Window) {
     let _ = window.set_focus();
 }
 
+const WINDOW_WIDTH: f64 = 400.0;
 const PANEL_COLLAPSED_HEIGHT: f64 = 40.0;
 const PANEL_EXPANDED_HEIGHT: f64 = 180.0;
 
 #[tauri::command]
 fn snap_to_corner(window: tauri::Window) {
     if let Ok(Some(monitor)) = window.primary_monitor() {
-        let _ = window.set_size(tauri::Size::Logical(tauri::LogicalSize::new(400.0, PANEL_COLLAPSED_HEIGHT)));
+        let _ = window.set_size(tauri::Size::Logical(tauri::LogicalSize::new(WINDOW_WIDTH, PANEL_COLLAPSED_HEIGHT)));
 
         let scale_factor = monitor.scale_factor();
 
         // Use physical pixels for position to be precise about the taskbar gap
-        let win_w_phys = (400.0 * scale_factor) as u32;
+        let win_w_phys = (WINDOW_WIDTH * scale_factor) as u32;
         let win_h_phys = (PANEL_COLLAPSED_HEIGHT * scale_factor) as u32;
         let taskbar_h_phys = (monitor.size().height as i32 - monitor.work_area().size.height as i32).abs();
 
@@ -396,16 +397,34 @@ fn snap_to_corner(window: tauri::Window) {
 /// past the taskbar. Collapsing restores the exact Y captured at expand time
 /// (see `AppState::collapsed_y`) rather than recomputing from current
 /// geometry, so the bar can't end up a few pixels off from where it started.
+/// `height` (logical px) lets the caller ask for just enough room for its
+/// content — e.g. the small device popup doesn't need the full playlist-panel
+/// height — defaulting to PANEL_EXPANDED_HEIGHT when omitted.
 #[tauri::command]
-fn set_panel_expanded(window: tauri::Window, state: State<'_, AppState>, expanded: bool) {
-    let (Ok(pos), Ok(size)) = (window.outer_position(), window.outer_size()) else { return };
+fn set_panel_expanded(window: tauri::Window, state: State<'_, AppState>, expanded: bool, height: Option<f64>) {
+    let Ok(pos) = window.outer_position() else { return };
     let scale_factor = window.scale_factor().unwrap_or(1.0);
+    // Always re-derive width from the fixed logical constant rather than trusting
+    // outer_size(): near a monitor boundary with mixed DPI, Windows can silently
+    // rescale the window's physical width on every move to preserve its logical
+    // size, and "preserving" that already-drifted value would ratchet it wider
+    // on every single expand/collapse cycle.
+    let width_phys = (WINDOW_WIDTH * scale_factor).round() as u32;
     let collapsed_height_phys = (PANEL_COLLAPSED_HEIGHT * scale_factor).round() as i32;
-    let expanded_height_phys = (PANEL_EXPANDED_HEIGHT * scale_factor).round() as i32;
+    // Clamp against a caller passing a height at or below the collapsed height
+    // (e.g. 0 or negative): that would make target_height_phys negative and wrap
+    // to a huge value on the `as u32` cast below.
+    let expanded_height_phys = ((height.unwrap_or(PANEL_EXPANDED_HEIGHT).max(PANEL_COLLAPSED_HEIGHT)) * scale_factor)
+        .round() as i32;
 
-    let mut collapsed_y = state.collapsed_y.lock().unwrap();
+    let mut collapsed_y = state.collapsed_y.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
     let (target_height_phys, new_y) = if expanded {
-        let base_y = pos.y;
+        // Reuse the stored baseline if we're already expanded (e.g. resizing the
+        // device popup to fit its content mid-open) instead of re-capturing pos.y,
+        // which at that point is the already-expanded position, not the true
+        // collapsed one — re-capturing it would shift the window further on every
+        // subsequent resize call within the same open session.
+        let base_y = collapsed_y.unwrap_or(pos.y);
         *collapsed_y = Some(base_y);
         (expanded_height_phys, base_y - (expanded_height_phys - collapsed_height_phys))
     } else {
@@ -413,7 +432,7 @@ fn set_panel_expanded(window: tauri::Window, state: State<'_, AppState>, expande
         (collapsed_height_phys, base_y)
     };
 
-    let _ = window.set_size(tauri::Size::Physical(tauri::PhysicalSize::new(size.width, target_height_phys as u32)));
+    let _ = window.set_size(tauri::Size::Physical(tauri::PhysicalSize::new(width_phys, target_height_phys as u32)));
     let _ = window.set_position(tauri::Position::Physical(tauri::PhysicalPosition::new(pos.x, new_y)));
 }
 
@@ -531,17 +550,27 @@ pub fn run() {
                                 // collapsed y from it instead of trusting ws.y directly.
                                 let scale_factor = scale_factor_at_position(&window, ws.x, ws.y);
                                 let collapsed_height_phys = (PANEL_COLLAPSED_HEIGHT * scale_factor).round() as i32;
-                                let bottom = ws.y + ws.height as i32;
-                                let corrected_y = bottom - collapsed_height_phys;
+                                // Clamp before casting: ws.height comes from a JSON file that
+                                // could be hand-edited or corrupted, and an out-of-range value
+                                // would otherwise wrap on the u32->i32 cast.
+                                let safe_height = ws.height.min(i32::MAX as u32) as i32;
+                                let bottom = ws.y.saturating_add(safe_height);
+                                let corrected_y = bottom.saturating_sub(collapsed_height_phys);
 
-                                let _ = window.set_position(tauri::Position::Physical(
-                                    tauri::PhysicalPosition::new(ws.x, corrected_y)
-                                ));
-                                // Do NOT restore size from state to ensure the fixed shape is applied
-                                let _ = window.set_size(tauri::Size::Logical(
-                                    tauri::LogicalSize::new(400.0, PANEL_COLLAPSED_HEIGHT)
-                                ));
-                                restored = true;
+                                // Re-validate: the correction above can move the position off
+                                // every monitor if ws.height was stale/corrupted, in which case
+                                // fall through to the OS-specific snap-to-corner logic below
+                                // instead of restoring the window somewhere invisible.
+                                if is_position_valid_on_monitors(&window, ws.x, corrected_y) {
+                                    let _ = window.set_position(tauri::Position::Physical(
+                                        tauri::PhysicalPosition::new(ws.x, corrected_y)
+                                    ));
+                                    // Do NOT restore size from state to ensure the fixed shape is applied
+                                    let _ = window.set_size(tauri::Size::Logical(
+                                        tauri::LogicalSize::new(WINDOW_WIDTH, PANEL_COLLAPSED_HEIGHT)
+                                    ));
+                                    restored = true;
+                                }
                             }
                         }
                     }
@@ -574,7 +603,7 @@ pub fn run() {
                     if let Ok(Some(monitor)) = window.primary_monitor() {
                         let full_size = monitor.size();
                         let sf = monitor.scale_factor();
-                        let win_w = (400.0 * sf) as f64;
+                        let win_w = (WINDOW_WIDTH * sf) as f64;
                         let padding = (20.0 * sf) as f64;
                         
                         let x = (full_size.width as f64 - win_w - padding) as i32;

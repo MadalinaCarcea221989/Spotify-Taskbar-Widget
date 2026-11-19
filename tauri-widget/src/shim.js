@@ -122,7 +122,7 @@ window.player = {
 
     getPlaylists: async () => nativeFetch('/me/playlists?limit=50'),
     getPlaylistTracks: async (playlistId) =>
-        nativeFetch(`/playlists/${playlistId}/tracks?limit=50&fields=items(track(id,uri,name,artists(name),album(images)))`),
+        nativeFetch(`/playlists/${encodeURIComponent(playlistId)}/tracks?limit=50&fields=items(track(id,uri,name,artists(name),album(images)))`),
     playContext: async (contextUri, deviceId, offsetUri) => {
         const body = { context_uri: contextUri };
         if (offsetUri) body.offset = { uri: offsetUri };
@@ -136,7 +136,8 @@ window.player = {
     getLikedSongs: async () => nativeFetch('/me/tracks?limit=50'),
     searchTracks: async (query) => nativeFetch(`/search?q=${encodeURIComponent(query)}&type=track&limit=20`),
     getMe: async () => nativeFetch('/me'),
-    getArtistTopTracks: async (artistId, market) => nativeFetch(`/artists/${artistId}/top-tracks?market=${encodeURIComponent(market)}`),
+    getArtistTopTracks: async (artistId, market) =>
+        nativeFetch(`/artists/${encodeURIComponent(artistId)}/top-tracks?market=${encodeURIComponent(market)}`),
     queueTrack: async (uri, deviceId) =>
         nativeFetch(`/me/player/queue?uri=${encodeURIComponent(uri)}${deviceId ? `&device_id=${deviceId}` : ''}`, 'POST'),
 };

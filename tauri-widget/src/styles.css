@@ -27,15 +27,31 @@ html, body {
 #widget-container {
     width: 100%;
     height: 100%;
-    background-color: var(--bg-color);
-    backdrop-filter: blur(28px) saturate(200%);
-    border-radius: 6px;
-    border: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
     overflow: hidden;
     -webkit-app-region: drag;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+/* Dragging while a panel is expanded would move the window without Rust's
+   collapsed_y baseline knowing, so closing afterward would snap back to the
+   stale pre-drag spot. Disabling drag while a panel is open avoids that. */
+#widget-container.panel-open {
+    -webkit-app-region: no-drag;
+}
+
+/* The "card" chrome lives on the individual always-40px-tall views, not the
+   outer container — otherwise an expanded panel (which grows the window much
+   taller) would sit inside one giant bordered box instead of floating freely
+   with transparent space around it. */
+#bar-row,
+#auth-view,
+#message-view {
+    background-color: var(--bg-color);
+    backdrop-filter: blur(28px) saturate(200%);
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .view {
@@ -56,6 +72,7 @@ html, body {
     min-height: 40px;
     flex-shrink: 0;
     display: flex;
+    overflow: hidden;
     /* The window grows upward (bottom edge stays anchored near the taskbar), so
        the bar must render last in the column to stay visually pinned to the
        bottom while any expanded panel fills the new space above it. */
@@ -334,6 +351,18 @@ html, body {
 #device-panel {
     position: relative;
     background: transparent;
+}
+
+/* Playlists is a floating card too, inset from the window edges with a gap
+   above the bar, rather than a flush panel sharing the outer window's chrome. */
+#playlist-panel {
+    margin: 6px 6px 6px 6px;
+    background-color: var(--bg-color);
+    backdrop-filter: blur(28px) saturate(200%);
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    overflow: hidden;
 }
 
 .device-popup-card {
