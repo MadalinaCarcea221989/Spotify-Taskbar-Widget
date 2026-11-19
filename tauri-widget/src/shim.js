@@ -72,7 +72,7 @@ window.player = {
 
     // Mirrors the current track into the OS media session (Windows media
     // controls). Pass null when nothing is playing.
-    updateMediaSession: (info) => invoke('update_media_session', { info }).catch(() => {}),
+    updateMediaSession: (info) => invoke('update_media_session', { info }).catch((e) => console.error('updateMediaSession failed:', e)),
 
     getNowPlaying: async () => {
         const res = await nativeFetch('/me/player');

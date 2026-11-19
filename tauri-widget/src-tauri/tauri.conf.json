@@ -18,7 +18,8 @@
                                     "alwaysOnTop":  true,
                                     "resizable":  false,
                                     "visible":  true,
-                                    "skipTaskbar":  false
+                                    "skipTaskbar":  false,
+                                    "additionalBrowserArgs":  "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection,HardwareMediaKeyHandling,MediaSessionService"
                                 }
                             ],
                 "security":  {

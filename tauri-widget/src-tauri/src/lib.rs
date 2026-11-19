@@ -46,7 +46,35 @@ struct AppState {
 
 /// The OS media session (Windows media controls). `None` when it couldn't be
 /// created or on platforms that don't have one yet; updates are then no-ops.
-struct MediaState(std::sync::Mutex<Option<media_session::MediaSession>>);
+struct MediaState(std::sync::Mutex<MediaInner>);
+
+struct MediaInner {
+    session: Option<media_session::MediaSession>,
+    /// Last (title, is_playing) logged, so updates are logged only on change.
+    last_logged: Option<(String, bool)>,
+    /// Last creation error logged, so a failing retry is logged once, not every poll.
+    last_error: Option<String>,
+}
+
+/// Creates the OS media session on the "main" window. Button presses from the
+/// OS come back as "media-key" events.
+#[cfg(target_os = "windows")]
+fn create_media_session(app: &AppHandle) -> Result<media_session::MediaSession, String> {
+    let window = app
+        .get_webview_window("main")
+        .ok_or("main window not found")?;
+    let hwnd = window.hwnd().map_err(|e| format!("hwnd() failed: {e}"))?;
+    let handle = app.clone();
+    media_session::MediaSession::new(hwnd.0, move |action| {
+        let _ = handle.emit("media-key", action);
+    })
+    .map_err(|e| format!("MediaSession::new failed: {e}"))
+}
+
+#[cfg(not(target_os = "windows"))]
+fn create_media_session(_app: &AppHandle) -> Result<media_session::MediaSession, String> {
+    Err("not supported on this platform".into())
+}
 
 /// Tokens are stored in the OS credential store (Credential Manager / Keychain /
 /// Secret Service) rather than on disk, so a stolen filesystem snapshot alone
@@ -291,14 +319,47 @@ fn exit_app(app: AppHandle) {
 /// `info` is `null` when nothing is playing.
 #[tauri::command]
 fn update_media_session(
+    app: AppHandle,
     state: State<'_, MediaState>,
     info: Option<media_session::TrackInfo>,
 ) -> Result<(), String> {
     let mut guard = state.0.lock().map_err(|e| e.to_string())?;
-    match guard.as_mut() {
-        Some(session) => session.update(info.as_ref()),
-        None => Ok(()),
+    let inner = &mut *guard;
+
+    // Retry creating the session if it failed at startup.
+    if inner.session.is_none() {
+        match create_media_session(&app) {
+            Ok(session) => {
+                eprintln!("Media session registered (retry)");
+                inner.session = Some(session);
+                inner.last_error = None;
+            }
+            Err(e) => {
+                if inner.last_error.as_deref() != Some(e.as_str()) {
+                    eprintln!("Media session retry failed: {e}");
+                    inner.last_error = Some(e);
+                }
+                return Ok(());
+            }
+        }
     }
+
+    let now = info.as_ref().map(|t| (t.title.clone(), t.is_playing));
+    if now != inner.last_logged {
+        match &now {
+            Some((title, is_playing)) => {
+                eprintln!("Media update: title={title:?} is_playing={is_playing}")
+            }
+            None => eprintln!("Media update: cleared (nothing playing)"),
+        }
+        inner.last_logged = now;
+    }
+
+    let session = inner.session.as_mut().expect("session set above");
+    session.update(info.as_ref()).map_err(|e| {
+        eprintln!("media update failed: {e}");
+        e
+    })
 }
 
 #[tauri::command]
@@ -517,25 +578,21 @@ pub fn run() {
             // can show what's playing. Their play/pause/next/previous buttons come
             // back as the same "media-key" events the global media keys emit, so
             // the frontend handles them with the code it already has.
-            #[cfg(target_os = "windows")]
-            let os_media = app
-                .get_webview_window("main")
-                .and_then(|w| w.hwnd().ok())
-                .and_then(|hwnd| {
-                    let handle = app.handle().clone();
-                    match media_session::MediaSession::new(hwnd.0, move |action| {
-                        let _ = handle.emit("media-key", action);
-                    }) {
-                        Ok(session) => Some(session),
-                        Err(e) => {
-                            eprintln!("Media session unavailable: {e}");
-                            None
-                        }
-                    }
-                });
-            #[cfg(not(target_os = "windows"))]
-            let os_media: Option<media_session::MediaSession> = None;
-            app.manage(MediaState(std::sync::Mutex::new(os_media)));
+            let (os_media, last_error) = match create_media_session(app.handle()) {
+                Ok(session) => {
+                    eprintln!("Media session registered");
+                    (Some(session), None)
+                }
+                Err(e) => {
+                    eprintln!("Media session unavailable: {e}");
+                    (None, Some(e))
+                }
+            };
+            app.manage(MediaState(std::sync::Mutex::new(MediaInner {
+                session: os_media,
+                last_logged: None,
+                last_error,
+            })));
 
             // --- System Tray Setup ---
             let quit_i = tauri::menu::MenuItem::with_id(app, "quit", "Quit Spotify Widget", true, None::<&str>).unwrap();

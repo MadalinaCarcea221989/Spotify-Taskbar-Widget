@@ -320,6 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             switch (result.status) {
                 case 'unauthorized':
+                    syncOsMediaSession(null);
                     showView('auth');
                     // Stop polling when unauthorized to save resources
                     currentPollingInterval = POLLING_INTERVAL_HIDDEN;
@@ -340,15 +341,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     currentPollingInterval = isWindowVisible ? POLLING_INTERVAL_IDLE : POLLING_INTERVAL_HIDDEN;
                     break;
                 case 'error':
+                    syncOsMediaSession(null);
                     showMessage(result.message || 'An unknown error occurred.');
                     currentPollingInterval = POLLING_INTERVAL_IDLE;
                     break;
                 default:
+                    syncOsMediaSession(null);
                     showView('auth');
                     currentPollingInterval = POLLING_INTERVAL_HIDDEN;
             }
         } catch (error) {
             console.error('Error fetching now playing:', error);
+            syncOsMediaSession(null);
             showMessage('Failed to fetch data.');
             currentPollingInterval = POLLING_INTERVAL_IDLE;
         } finally {
